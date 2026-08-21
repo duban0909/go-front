@@ -1,0 +1,112 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Servicios</h1>
+      <p>Administra tu catalogo de servicios</p>
+    </div>
+    <app-button type="button" [fit]="true" (click)="openCreateModal()">
+      <app-lucide-icon name="plus" [size]="20" [strokeWidth]="2.2" />
+      Nuevo servicio
+    </app-button>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <article class="stat-card">
+    <span class="stat-icon">
+      <app-lucide-icon name="shopping-bag" [size]="26" [strokeWidth]="1.9" />
+    </span>
+    <div>
+      <p class="stat-label">Servicios activos</p>
+      <p class="stat-value">
+        @if (isLoading()) {
+          <span class="skeleton-line skeleton-value"></span>
+        } @else {
+          {{ services().length }}
+        }
+      </p>
+      <p class="stat-caption">Total de servicios</p>
+    </div>
+  </article>
+
+  @if (isLoading()) {
+    <div class="service-list" aria-hidden="true">
+      @for (row of skeletonRows; track row) {
+        <article class="service-card skeleton-card">
+          <span class="service-icon skeleton-block"></span>
+          <div class="service-body">
+            <div class="skeleton-line" style="width: 60%; height: 1.05rem"></div>
+            <div class="skeleton-line" style="width: 40%; margin-top: 0.5rem"></div>
+            <div class="skeleton-line skeleton-pill" style="margin-top: 0.6rem"></div>
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="service-list">
+      @for (service of services(); track service.id) {
+        <article class="service-card">
+          <span class="service-icon">
+            <app-lucide-icon name="scissors" [size]="24" [strokeWidth]="1.9" />
+          </span>
+
+          <div class="service-body">
+            <h3>{{ service.name }}</h3>
+            <p class="service-meta">
+              <span class="meta-duration">
+                <app-lucide-icon name="clock" [size]="15" [strokeWidth]="2" />
+                {{ service.duration_minutes }} min
+              </span>
+              <span class="dot">|</span>
+              <strong>{{ service.price | copCurrency }}</strong>
+            </p>
+            <span class="status-badge" [class.inactive]="!service.active">
+              <app-lucide-icon name="circle-check-big" [size]="14" [strokeWidth]="2.2" />
+              {{ service.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+
+          <div class="service-actions">
+            <button type="button" class="icon-btn edit" (click)="openEditModal(service)" aria-label="Editar servicio">
+              <app-lucide-icon name="pencil" [size]="18" [strokeWidth]="2" />
+            </button>
+            <button type="button" class="icon-btn delete" (click)="deleteService(service)" aria-label="Eliminar servicio">
+              <app-lucide-icon name="trash-2" [size]="18" [strokeWidth]="2" />
+            </button>
+          </div>
+        </article>
+      } @empty {
+        <p class="hint-text">Todavia no tienes servicios registrados.</p>
+      }
+    </div>
+  }
+
+  <article class="promo-card">
+    <span class="promo-icon">
+      <app-lucide-icon name="clipboard-list" [size]="30" [strokeWidth]="1.7" />
+    </span>
+    <h3>Organiza tus servicios</h3>
+    <p>Manten tu catalogo actualizado y atrae mas clientes</p>
+  </article>
+
+  <app-button type="button" (click)="openCreateModal()">
+    <app-lucide-icon name="plus" [size]="20" [strokeWidth]="2.2" />
+    Nuevo servicio
+  </app-button>
+</section>
+
+@if (isModalOpen()) {
+  <app-modal [title]="editingService() ? 'Editar servicio' : 'Nuevo servicio'" (close)="closeModal()">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="service-form">
+      <app-text-field label="Nombre del servicio" placeholder="Ej. Corte de Cabello" formControlName="name" />
+      <app-text-field label="Duracion (minutos)" type="number" placeholder="30" formControlName="duration_minutes" />
+      <app-text-field label="Precio" type="number" placeholder="25000" formControlName="price" />
+
+      <app-button type="submit" [loading]="isSaving()">
+        {{ isSaving() ? 'Guardando...' : 'Guardar servicio' }}
+      </app-button>
+    </form>
+  </app-modal>
+}

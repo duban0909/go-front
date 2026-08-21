@@ -1,0 +1,41 @@
+<main class="mobile-login">
+  <section class="login-wrap" aria-label="Acceso GoAgenda">
+    <img src="/Logo.png" alt="GoAgenda" class="brand-logo" />
+
+    <header class="hero-copy">
+      <h1>Bienvenido de nuevo</h1>
+      <p>Inicia sesion para administrar tu negocio</p>
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+      <app-text-field
+        label="Correo"
+        icon="mail"
+        type="email"
+        inputmode="email"
+        autocomplete="email"
+        placeholder="Correo"
+        formControlName="email"
+        [error]="fieldError('email')"
+      />
+
+      <app-text-field
+        label="Contrasena"
+        icon="lock"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Contrasena"
+        formControlName="password"
+        [error]="fieldError('password')"
+      />
+
+      @if (errorMessage()) {
+        <p class="auth-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <app-button type="submit" [loading]="isLoading()">
+        {{ isLoading() ? 'Iniciando...' : 'Iniciar sesion' }}
+      </app-button>
+    </form>
+  </section>
+</main>

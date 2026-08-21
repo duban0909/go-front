@@ -1,1 +1,73 @@
-/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap');
+
+:root {
+	--go-teal: #03a580;
+	--go-navy: #0e182c;
+	--go-charcoal: #1d293d;
+	--go-dark: #2a3144;
+	--go-slate-200: #cdd9e4;
+	--go-bg: #f1f5f9;
+
+	--go-radius-sm: 0.75rem;
+	--go-radius-md: 1rem;
+	--go-radius-lg: 1.4rem;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: Manrope, 'Avenir Next', 'Segoe UI', sans-serif;
+	color: var(--go-charcoal);
+	background: var(--go-bg);
+}
+
+h1,
+h2,
+h3 {
+	font-family: Sora, Manrope, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+button {
+	cursor: pointer;
+}
+
+@keyframes skeleton-pulse {
+	0%,
+	100% {
+		opacity: 0.5;
+	}
+
+	50% {
+		opacity: 1;
+	}
+}
+
+.skeleton-block,
+.skeleton-line {
+	background: var(--go-slate-200);
+	border-radius: 0.4rem;
+	animation: skeleton-pulse 1.2s ease-in-out infinite;
+}
+
+.skeleton-line {
+	height: 0.85rem;
+}
+
+.skeleton-card {
+	pointer-events: none;
+}

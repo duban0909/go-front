@@ -1,0 +1,257 @@
+:host {
+  display: block;
+  padding: 1.1rem 1.1rem 3rem;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.page-header h1 {
+  margin: 0 0 0.2rem;
+  color: var(--go-navy);
+  font-size: 1.6rem;
+}
+
+.page-header p {
+  margin: 0;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.92rem;
+}
+
+.error-banner {
+  margin: 0;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, #bd2e2e 28%, white);
+  background: color-mix(in srgb, #bd2e2e 8%, white);
+  color: #7f2121;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.stat-card,
+.reminder-card,
+.day-card {
+  background: #fff;
+  border-radius: var(--go-radius-lg);
+  box-shadow: 0 4px 14px rgb(16 32 64 / 6%);
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.2rem;
+  margin: 0.6rem 0;
+}
+
+.stat-icon,
+.reminder-icon {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+}
+
+.stat-label,
+.stat-caption {
+  margin: 0;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.85rem;
+}
+
+.stat-value {
+  margin: 0.1rem 0;
+  color: var(--go-navy);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.reminder-card {
+  padding: 1.1rem 1.2rem;
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.6rem 0;
+}
+
+.reminder-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.reminder-header h2 {
+  margin: 0;
+  color: var(--go-navy);
+  font-size: 1rem;
+}
+
+.reminder-card p {
+  margin: 0;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.reminder-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--go-teal) 10%, white);
+  color: var(--go-dark);
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.reminder-select select {
+  border: 0;
+  background: transparent;
+  color: var(--go-teal);
+  font-weight: 800;
+  font-size: 0.92rem;
+}
+
+.section-title {
+  margin: 0;
+  color: var(--go-navy);
+  font-size: 1rem;
+}
+
+.hint-text {
+  color: color-mix(in srgb, var(--go-dark) 60%, white);
+  font-size: 0.92rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.day-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.day-card {
+  padding: 1rem 1.1rem;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.day-info {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.day-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: var(--go-bg);
+  color: color-mix(in srgb, var(--go-dark) 55%, white);
+}
+
+.day-icon.active {
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+}
+
+.day-name {
+  color: var(--go-navy);
+  font-weight: 700;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 3.4rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  border: 1.5px solid color-mix(in srgb, var(--go-dark) 30%, white);
+  background: var(--go-bg);
+  padding: 0.15rem;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.toggle-switch.on {
+  background: var(--go-teal);
+  border-color: var(--go-teal);
+}
+
+.toggle-thumb {
+  display: block;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--go-dark) 35%, white);
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.toggle-switch.on .toggle-thumb {
+  transform: translateX(1.5rem);
+  background: #fff;
+}
+
+.day-detail {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--go-bg);
+  display: grid;
+  gap: 0.7rem;
+}
+
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.6rem;
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.88rem;
+  flex-shrink: 0;
+}
+
+.time-range {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  flex: 1 1 auto;
+  justify-content: flex-end;
+  color: color-mix(in srgb, var(--go-dark) 55%, white);
+}
+
+.time-range input {
+  border: 0;
+  background: var(--go-bg);
+  border-radius: 0.6rem;
+  padding: 0.4rem 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--go-navy);
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 5.6rem;
+  max-width: 6.4rem;
+}
+
+@media (min-width: 900px) {
+  :host {
+    padding: 1.5rem 2rem 2.5rem;
+  }
+}

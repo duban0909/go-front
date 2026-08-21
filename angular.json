@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "673209a1-b97b-4c68-9b7b-a35f875738b6"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -54,6 +55,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": [".ngrok-free.app", "de4e-190-60-37-94.ngrok-free.app"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "go-agenda:build:production"

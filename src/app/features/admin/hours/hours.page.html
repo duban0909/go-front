@@ -1,0 +1,121 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Horario de Atencion</h1>
+    <p>Configura tus dias y horas de atencion</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <article class="stat-card">
+    <span class="stat-icon">
+      <app-lucide-icon name="calendar-check" [size]="26" [strokeWidth]="1.9" />
+    </span>
+    <div>
+      <p class="stat-label">Dias activos</p>
+      <p class="stat-value">{{ activeDaysCount() }} de 7</p>
+      <p class="stat-caption">Dias de atencion por semana</p>
+    </div>
+  </article>
+
+  <article class="reminder-card">
+    <div class="reminder-header">
+      <span class="reminder-icon">
+        <app-lucide-icon name="bell" [size]="22" [strokeWidth]="1.9" />
+      </span>
+      <h2>Recordatorio de citas</h2>
+    </div>
+    <p>Envia un recordatorio automatico por WhatsApp antes de cada cita.</p>
+
+    <label class="reminder-select">
+      Avisar
+      <select
+        [ngModel]="reminderHoursBefore()"
+        (ngModelChange)="onReminderChange($event)"
+      >
+        @for (option of reminderOptions; track option) {
+          <option [value]="option">{{ option }} horas</option>
+        }
+      </select>
+      antes
+    </label>
+  </article>
+
+  <h2 class="section-title">Dias de la semana</h2>
+
+  @if (isLoading()) {
+    <p class="hint-text">Cargando horario...</p>
+  } @else {
+    <div class="day-list">
+      @for (day of days(); track day.key) {
+        <article class="day-card">
+          <div class="day-row">
+            <div class="day-info">
+              <span class="day-icon" [class.active]="day.isOpen">
+                <app-lucide-icon [name]="day.isOpen ? 'calendar-check' : 'calendar-x'" [size]="20" [strokeWidth]="1.9" />
+              </span>
+              <span class="day-name">{{ day.label }}</span>
+            </div>
+
+            <button
+              type="button"
+              class="toggle-switch"
+              [class.on]="day.isOpen"
+              role="switch"
+              [attr.aria-checked]="day.isOpen"
+              [attr.aria-label]="day.label"
+              (click)="toggleDay(day)"
+            >
+              <span class="toggle-thumb"></span>
+            </button>
+          </div>
+
+          @if (day.isOpen) {
+            <div class="day-detail">
+              <div class="detail-row">
+                <span class="detail-label">
+                  <app-lucide-icon name="clock" [size]="16" [strokeWidth]="1.9" />
+                  Atencion
+                </span>
+                <span class="time-range">
+                  <input
+                    type="time"
+                    [(ngModel)]="day.openingTime"
+                    (change)="onTimeChange(day)"
+                  />
+                  <span>-</span>
+                  <input
+                    type="time"
+                    [(ngModel)]="day.closingTime"
+                    (change)="onTimeChange(day)"
+                  />
+                </span>
+              </div>
+
+              <div class="detail-row">
+                <span class="detail-label">
+                  <app-lucide-icon name="utensils" [size]="16" [strokeWidth]="1.9" />
+                  Almuerzo
+                </span>
+                <span class="time-range">
+                  <input
+                    type="time"
+                    [(ngModel)]="day.lunchStart"
+                    (change)="onTimeChange(day)"
+                  />
+                  <span>-</span>
+                  <input
+                    type="time"
+                    [(ngModel)]="day.lunchEnd"
+                    (change)="onTimeChange(day)"
+                  />
+                </span>
+              </div>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>
