@@ -11,6 +11,37 @@
   <article class="card">
     <h2>
       <span class="card-icon">
+        <app-lucide-icon name="message-circle" [size]="20" [strokeWidth]="1.9" />
+      </span>
+      Enlace de chat
+      <span class="chat-status" [class.chat-status-off]="!chatEnabled()">
+        {{ chatEnabled() ? 'Activo' : 'Inactivo' }}
+      </span>
+    </h2>
+
+    <p class="hint-text">
+      Comparte este enlace con tus clientes para que agenden citas hablando con tu asistente virtual.
+    </p>
+
+    <div class="chat-link-row">
+      <input class="chat-link-input" type="text" [value]="chatLink()" readonly aria-label="Enlace de chat" />
+      <app-button type="button" variant="ghost" [fit]="true" (click)="copyLink()">
+        <app-lucide-icon [name]="linkCopied() ? 'circle-check-big' : 'copy'" [size]="18" [strokeWidth]="2" />
+        {{ linkCopied() ? 'Copiado' : 'Copiar' }}
+      </app-button>
+    </div>
+
+    @if (!chatEnabled()) {
+      <p class="chat-hint-warning">
+        El agendamiento automatico aun no esta activo para tu plan. El enlace funciona, pero el asistente no podra
+        agendar citas hasta activarlo.
+      </p>
+    }
+  </article>
+
+  <article class="card">
+    <h2>
+      <span class="card-icon">
         <app-lucide-icon name="store" [size]="20" [strokeWidth]="1.9" />
       </span>
       Datos del negocio

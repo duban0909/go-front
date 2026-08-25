@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -22,7 +22,15 @@ export class SettingsPageComponent implements OnInit {
   readonly error = signal('');
   readonly successMessage = signal('');
 
+  readonly chatEnabled = signal(false);
+  readonly linkCopied = signal(false);
+
   readonly form;
+
+  readonly chatLink = computed(() => {
+    const businessId = this.sessionService.businessId();
+    return businessId ? `${window.location.origin}/chat/${businessId}` : '';
+  });
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -39,6 +47,38 @@ export class SettingsPageComponent implements OnInit {
 
   ngOnInit(): void {
     void this.loadSettings();
+    void this.loadChatConfig();
+  }
+
+  async loadChatConfig(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId) {
+      return;
+    }
+
+    try {
+      const config = await firstValueFrom(this.apiService.getChatConfig(businessId));
+      this.chatEnabled.set(config.enabled);
+    } catch {
+      this.chatEnabled.set(false);
+    }
+  }
+
+  async copyLink(): Promise<void> {
+    const link = this.chatLink();
+
+    if (!link) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(link);
+      this.linkCopied.set(true);
+      setTimeout(() => this.linkCopied.set(false), 2000);
+    } catch {
+      this.error.set('No se pudo copiar el enlace.');
+    }
   }
 
   async loadSettings(): Promise<void> {

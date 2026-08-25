@@ -13,6 +13,11 @@ import {
   BusinessInfoUpdate,
   BusinessSettings,
   BusinessSettingsResponse,
+  ChatConfig,
+  ChatHistoryMessage,
+  ChatHistoryResponse,
+  ChatMessageResponse,
+  CreateSessionResponse,
   DayHour,
   DayHourUpdate,
   ExcludedChat,
@@ -132,5 +137,30 @@ export class GoagendaApiService {
 
   requestPairingCode(payload: PairingCodeInput): Observable<PairingCodeResponse> {
     return this.http.post<PairingCodeResponse>(`${GOAGENDA_API_URL}/baileys/pairing-code`, payload);
+  }
+
+  // Chat publico de agendamiento
+  getChatConfig(businessId: string): Observable<ChatConfig> {
+    return this.http.get<ChatConfig>(`${GOAGENDA_API_URL}/chat/${businessId}/config`);
+  }
+
+  createChatSession(businessId: string): Observable<string> {
+    return this.http
+      .post<CreateSessionResponse>(`${GOAGENDA_API_URL}/chat/${businessId}/sessions`, {})
+      .pipe(map((response) => response.session_id));
+  }
+
+  sendChatMessage(businessId: string, sessionId: string, mensaje: string): Observable<string> {
+    return this.http
+      .post<ChatMessageResponse>(`${GOAGENDA_API_URL}/chat/${businessId}/sessions/${sessionId}/messages`, {
+        mensaje
+      })
+      .pipe(map((response) => response.respuesta));
+  }
+
+  getChatHistory(businessId: string, sessionId: string): Observable<ChatHistoryMessage[]> {
+    return this.http
+      .get<ChatHistoryResponse>(`${GOAGENDA_API_URL}/chat/${businessId}/sessions/${sessionId}/messages`)
+      .pipe(map((response) => response.mensajes));
   }
 }

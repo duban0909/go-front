@@ -44,6 +44,50 @@
   font-size: 1.05rem;
 }
 
+.chat-status {
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.chat-status-off {
+  background: color-mix(in srgb, var(--go-dark) 12%, white);
+  color: color-mix(in srgb, var(--go-dark) 65%, white);
+}
+
+.chat-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.7rem;
+}
+
+.chat-link-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--go-dark) 15%, white);
+  border-radius: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--go-bg);
+  color: var(--go-charcoal);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.chat-hint-warning {
+  margin: 0.8rem 0 0;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, #c98a1d 30%, white);
+  background: color-mix(in srgb, #c98a1d 10%, white);
+  color: #7a5511;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.82rem;
+}
+
 .card-icon {
   width: 2.3rem;
   height: 2.3rem;

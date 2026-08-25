@@ -1,0 +1,92 @@
+<main class="chat-page">
+  @if (isLoadingConfig()) {
+    <div class="state-screen">
+      <div class="skeleton-block avatar-skeleton"></div>
+      <p class="hint-text">Cargando chat...</p>
+    </div>
+  } @else if (notFound()) {
+    <div class="state-screen">
+      <app-lucide-icon name="message-circle" [size]="40" [strokeWidth]="1.6" />
+      <h1>Chat no disponible</h1>
+      <p>Este enlace no corresponde a un negocio activo. Verifica el enlace con el negocio.</p>
+    </div>
+  } @else {
+    <header class="chat-header">
+      <div class="avatar">{{ businessInitial() }}</div>
+      <div class="header-copy">
+        <h1>{{ businessName() }}</h1>
+        <span class="status" [class.offline]="!enabled()">
+          {{ enabled() ? 'Agenda tu cita por chat' : 'Agendamiento automatico no disponible' }}
+        </span>
+      </div>
+      <button
+        type="button"
+        class="sound-toggle"
+        (click)="toggleSound()"
+        [attr.aria-pressed]="soundEnabled()"
+        [attr.aria-label]="soundEnabled() ? 'Silenciar sonido de mensajes' : 'Activar sonido de mensajes'"
+        title="{{ soundEnabled() ? 'Silenciar sonido' : 'Activar sonido' }}"
+      >
+        <app-lucide-icon [name]="soundEnabled() ? 'volume-2' : 'volume-x'" [size]="19" [strokeWidth]="1.9" />
+      </button>
+      <img src="/Logo.png" alt="GoAgenda" class="brand-mark" />
+    </header>
+
+    @if (!enabled()) {
+      <p class="disabled-banner">
+        Este negocio aun no activa el agendamiento automatico por chat. Contacta al negocio directamente para tu cita.
+      </p>
+    }
+
+    <div class="messages">
+      @for (message of messages(); track $index) {
+        <div class="bubble-row" [class.from-user]="message.role === 'user'">
+          @if (message.role === 'assistant') {
+            <div class="avatar avatar-sm">{{ businessInitial() }}</div>
+          }
+          <div class="bubble" [class.bubble-user]="message.role === 'user'" [innerHTML]="formatMessage(message.content)"></div>
+        </div>
+      }
+
+      @if (isSending()) {
+        <div class="bubble-row" aria-live="polite">
+          <div class="avatar avatar-sm">{{ businessInitial() }}</div>
+          <div class="bubble bubble-typing" aria-label="Escribiendo...">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+      }
+
+      <div #scrollAnchor></div>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="chat-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="composer">
+      <textarea
+        #composerInput
+        rows="1"
+        placeholder="Escribe tu mensaje..."
+        [value]="draft()"
+        (input)="onDraftInput($event)"
+        (keydown)="handleKeydown($event)"
+        [disabled]="!enabled() || isSending()"
+      ></textarea>
+      <button
+        type="button"
+        class="send-button"
+        (click)="sendMessage()"
+        [disabled]="!canSend()"
+        aria-label="Enviar mensaje"
+      >
+        <app-lucide-icon name="send" [size]="20" [strokeWidth]="2" />
+      </button>
+    </div>
+
+    <p class="powered-by">Impulsado por GoAgenda</p>
+  }
+</main>

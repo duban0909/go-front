@@ -134,3 +134,34 @@ export interface BaileysStatus {
   business_id: string;
   connected: boolean;
 }
+
+/** Info publica que el widget de chat necesita antes de arrancar. */
+export interface ChatConfig {
+  business_id: string;
+  name: string;
+  business_type: string | null;
+  enabled: boolean;
+}
+
+export interface CreateSessionResponse {
+  session_id: string;
+}
+
+export interface ChatMessageInput {
+  mensaje: string;
+}
+
+export interface ChatMessageResponse {
+  respuesta: string;
+}
+
+export interface ChatHistoryMessage {
+  role: string;
+  content: string;
+}
+
+/** Respuesta cruda de GET .../messages: los mensajes vienen envueltos bajo la clave "mensajes". */
+export interface ChatHistoryResponse {
+  session_id: string;
+  mensajes: ChatHistoryMessage[];
+}

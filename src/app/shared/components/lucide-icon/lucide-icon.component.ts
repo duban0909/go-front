@@ -1,4 +1,4 @@
-import { Component, Input, computed } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 export type LucideIconName =
   | 'mail'
@@ -29,6 +29,10 @@ export type LucideIconName =
   | 'clipboard-list'
   | 'user'
   | 'circle-check-big'
+  | 'send'
+  | 'message-circle'
+  | 'volume-2'
+  | 'volume-x'
   | 'x';
 
 type IconElement =
@@ -233,6 +237,39 @@ const LUCIDE_ICONS: Record<LucideIconName, LucideIconData> = {
     viewBox: '0 0 24 24',
     elements: [path('M21.801 10A10 10 0 1 1 17 3.335'), path('m9 11 3 3L22 4')]
   },
+  send: {
+    viewBox: '0 0 24 24',
+    elements: [
+      path(
+        'M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z'
+      ),
+      path('m21.854 2.147-10.94 10.939')
+    ]
+  },
+  'message-circle': {
+    viewBox: '0 0 24 24',
+    elements: [path('M7.9 20A9 9 0 1 0 4 16.1L2 22Z')]
+  },
+  'volume-2': {
+    viewBox: '0 0 24 24',
+    elements: [
+      path(
+        'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z'
+      ),
+      path('M16 9a5 5 0 0 1 0 6'),
+      path('M19.364 18.364a9 9 0 0 0 0-12.728')
+    ]
+  },
+  'volume-x': {
+    viewBox: '0 0 24 24',
+    elements: [
+      path(
+        'M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z'
+      ),
+      path('m22 8-6 6'),
+      path('m16 8 6 6')
+    ]
+  },
   x: { viewBox: '0 0 24 24', elements: [path('M18 6 6 18'), path('m6 6 12 12')] }
 };
 
@@ -279,5 +316,7 @@ export class LucideIconComponent {
   @Input() size = 24;
   @Input() strokeWidth = 1.75;
 
-  readonly icon = computed(() => LUCIDE_ICONS[this.name] ?? LUCIDE_ICONS.mail);
+  icon(): LucideIconData {
+    return LUCIDE_ICONS[this.name] ?? LUCIDE_ICONS.mail;
+  }
 }

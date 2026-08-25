@@ -6,6 +6,7 @@ import { HoursPageComponent } from './features/admin/hours/hours.page';
 import { ServicesPageComponent } from './features/admin/services/services.page';
 import { SettingsPageComponent } from './features/admin/settings/settings.page';
 import { LoginPageComponent } from './features/auth/login/login.page';
+import { ChatPageComponent } from './features/chat/chat.page';
 
 export const routes: Routes = [
 	{
@@ -21,6 +22,10 @@ export const routes: Routes = [
 				component: LoginPageComponent
 			}
 		]
+	},
+	{
+		path: 'chat/:businessId',
+		component: ChatPageComponent
 	},
 	{
 		path: 'admin',
