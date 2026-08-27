@@ -5,7 +5,7 @@ import { GoagendaApiService } from '../../../core/services/goagenda-api.service'
 import { SessionService } from '../../../core/services/session.service';
 import { SupabaseAppointmentsService } from '../../../core/services/supabase-appointments.service';
 import { AppointmentStatus } from '../../../core/models/appointment.model';
-import { ServiceItem } from '../../../core/models/goagenda.models';
+import { Employee, ServiceItem } from '../../../core/models/goagenda.models';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { UiModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
@@ -49,6 +49,7 @@ export class AppointmentsPageComponent implements OnInit {
   readonly today = new Date();
   readonly selectedDate = signal(new Date());
   readonly services = signal<ServiceItem[]>([]);
+  readonly employees = signal<Employee[]>([]);
   readonly appointments = signal<AppointmentView[]>([]);
   readonly isLoading = signal(false);
   readonly isModalOpen = signal(false);
@@ -76,12 +77,13 @@ export class AppointmentsPageComponent implements OnInit {
       client_name: ['', [Validators.required]],
       client_phone: ['', [Validators.required]],
       service_id: ['', [Validators.required]],
+      employee_id: ['', [Validators.required]],
       time: ['10:00', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
-    void this.loadServices().then(() => this.loadAppointments());
+    void Promise.all([this.loadServices(), this.loadEmployees()]).then(() => this.loadAppointments());
   }
 
   async loadServices(): Promise<void> {
@@ -96,6 +98,21 @@ export class AppointmentsPageComponent implements OnInit {
       this.services.set(services);
     } catch {
       this.error.set('No se pudo cargar el catalogo de servicios.');
+    }
+  }
+
+  async loadEmployees(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId) {
+      return;
+    }
+
+    try {
+      const employees = await firstValueFrom(this.apiService.listEmployees(businessId));
+      this.employees.set(employees);
+    } catch {
+      this.error.set('No se pudo cargar la lista de empleados.');
     }
   }
 
@@ -165,7 +182,8 @@ export class AppointmentsPageComponent implements OnInit {
   }
 
   openAgendarModal(): void {
-    this.form.reset({ client_name: '', client_phone: '', service_id: '', time: '10:00' });
+    const defaultEmployeeId = this.sessionService.currentEmployment()?.employee_id ?? '';
+    this.form.reset({ client_name: '', client_phone: '', service_id: '', employee_id: defaultEmployeeId, time: '10:00' });
     this.isModalOpen.set(true);
   }
 
@@ -181,7 +199,7 @@ export class AppointmentsPageComponent implements OnInit {
       return;
     }
 
-    const { client_name, client_phone, service_id, time } = this.form.getRawValue();
+    const { client_name, client_phone, service_id, employee_id, time } = this.form.getRawValue();
     const dateKey = toDateKey(this.selectedDate());
     const fecha_hora = `${dateKey}T${time}:00`;
 
@@ -192,6 +210,7 @@ export class AppointmentsPageComponent implements OnInit {
       await firstValueFrom(
         this.apiService.createManualAppointment({
           business_id: businessId,
+          employee_id,
           client_name,
           client_phone,
           service_id,

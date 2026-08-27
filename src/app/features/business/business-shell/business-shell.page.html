@@ -6,22 +6,37 @@
     </div>
   </header>
 
-  <main class="content-panel">
-    <router-outlet />
-  </main>
+  @if (isBlocked()) {
+    <div class="content-panel blocked-overlay">
+      <app-lucide-icon name="lock" [size]="40" [strokeWidth]="1.8" />
+      <h2>Este negocio esta bloqueado</h2>
+      <p>
+        Un administrador bloqueo este negocio. Mientras esto siga asi, el panel y el chat publico de
+        agendamiento no estan disponibles. Contacta al soporte de GoAgenda si crees que es un error.
+      </p>
+    </div>
+  } @else {
+    <main class="content-panel">
+      <router-outlet />
+    </main>
+  }
 
   <nav class="bottom-nav" aria-label="Navegacion principal">
-    <a routerLink="./appointments" routerLinkActive="active">
+    <a routerLink="./appointments" routerLinkActive="active" [class.disabled]="isBlocked()">
       <app-lucide-icon name="calendar" [size]="22" [strokeWidth]="2" />
       <span>Citas</span>
     </a>
-    <a routerLink="./services" routerLinkActive="active">
+    <a routerLink="./services" routerLinkActive="active" [class.disabled]="isBlocked()">
       <app-lucide-icon name="scissors" [size]="22" [strokeWidth]="2" />
       <span>Servicios</span>
     </a>
-    <a routerLink="./hours" routerLinkActive="active">
+    <a routerLink="./hours" routerLinkActive="active" [class.disabled]="isBlocked()">
       <app-lucide-icon name="clock" [size]="22" [strokeWidth]="2" />
       <span>Horario</span>
+    </a>
+    <a routerLink="./employees" routerLinkActive="active" [class.disabled]="isBlocked()">
+      <app-lucide-icon name="user" [size]="22" [strokeWidth]="2" />
+      <span>Empleados</span>
     </a>
     <a routerLink="./settings" routerLinkActive="active">
       <app-lucide-icon name="settings" [size]="22" [strokeWidth]="2" />

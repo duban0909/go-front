@@ -1,12 +1,23 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
-import { AdminShellPageComponent } from './features/admin/admin-shell/admin-shell.page';
-import { AppointmentsPageComponent } from './features/admin/appointments/appointments.page';
-import { HoursPageComponent } from './features/admin/hours/hours.page';
-import { ServicesPageComponent } from './features/admin/services/services.page';
-import { SettingsPageComponent } from './features/admin/settings/settings.page';
+import { businessInfoGuard, onboardingGuard, ownerGuard, sessionGuard, staffGuard, superAdminGuard } from './core/guards/session.guard';
+import { BusinessShellPageComponent } from './features/business/business-shell/business-shell.page';
+import { AppointmentsPageComponent } from './features/business/appointments/appointments.page';
+import { EmployeeHoursPageComponent } from './features/business/employees/employee-hours/employee-hours.page';
+import { EmployeeServicesPageComponent } from './features/business/employees/employee-services/employee-services.page';
+import { EmployeesListPageComponent } from './features/business/employees/employees-list/employees-list.page';
+import { HoursPageComponent } from './features/business/hours/hours.page';
+import { ServicesPageComponent } from './features/business/services/services.page';
+import { SettingsPageComponent } from './features/business/settings/settings.page';
 import { LoginPageComponent } from './features/auth/login/login.page';
+import { RegisterPageComponent } from './features/auth/register/register.page';
 import { ChatPageComponent } from './features/chat/chat.page';
+import { EmployeeShellPageComponent } from './features/employee/employee-shell/employee-shell.page';
+import { MyAppointmentsPageComponent } from './features/employee/appointments/my-appointments.page';
+import { MyHoursPageComponent } from './features/employee/hours/my-hours.page';
+import { MyServicesPageComponent } from './features/employee/services/my-services.page';
+import { MyProfilePageComponent } from './features/employee/profile/my-profile.page';
+import { RedeemCodePageComponent } from './features/onboarding/redeem-code/redeem-code.page';
+import { BusinessesPageComponent } from './features/super-admin/businesses/businesses.page';
 
 export const routes: Routes = [
 	{
@@ -20,17 +31,30 @@ export const routes: Routes = [
 			{
 				path: 'login',
 				component: LoginPageComponent
+			},
+			{
+				path: 'registro',
+				component: RegisterPageComponent
 			}
 		]
+	},
+	{
+		path: 'onboarding/codigo',
+		canActivate: [sessionGuard, onboardingGuard],
+		component: RedeemCodePageComponent
 	},
 	{
 		path: 'chat/:businessId',
 		component: ChatPageComponent
 	},
 	{
-		path: 'admin',
-		canActivate: [authGuard],
-		component: AdminShellPageComponent,
+		path: 'chat/:businessId/:employeeId',
+		component: ChatPageComponent
+	},
+	{
+		path: 'business',
+		canActivate: [sessionGuard, ownerGuard],
+		component: BusinessShellPageComponent,
 		children: [
 			{
 				path: '',
@@ -39,19 +63,70 @@ export const routes: Routes = [
 			},
 			{
 				path: 'appointments',
+				canActivate: [businessInfoGuard],
 				component: AppointmentsPageComponent
 			},
 			{
 				path: 'services',
+				canActivate: [businessInfoGuard],
 				component: ServicesPageComponent
 			},
 			{
 				path: 'hours',
+				canActivate: [businessInfoGuard],
 				component: HoursPageComponent
+			},
+			{
+				path: 'employees',
+				canActivate: [businessInfoGuard],
+				component: EmployeesListPageComponent
+			},
+			{
+				path: 'employees/:employeeId/hours',
+				canActivate: [businessInfoGuard],
+				component: EmployeeHoursPageComponent
+			},
+			{
+				path: 'employees/:employeeId/services',
+				canActivate: [businessInfoGuard],
+				component: EmployeeServicesPageComponent
 			},
 			{
 				path: 'settings',
 				component: SettingsPageComponent
+			}
+		]
+	},
+	{
+		path: 'admin',
+		canActivate: [sessionGuard, superAdminGuard],
+		component: BusinessesPageComponent
+	},
+	{
+		path: 'employee',
+		canActivate: [sessionGuard, staffGuard],
+		component: EmployeeShellPageComponent,
+		children: [
+			{
+				path: '',
+				pathMatch: 'full',
+				redirectTo: 'appointments'
+			},
+			{
+				path: 'appointments',
+				component: MyAppointmentsPageComponent
+			},
+			{
+				path: 'hours',
+				component: MyHoursPageComponent
+			},
+			{
+				path: 'services',
+				component: MyServicesPageComponent
+			},
+			{
+				path: 'profile',
+				component: MyProfilePageComponent
 			}
 		]
 	},

@@ -1,0 +1,17 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Mi horario</h1>
+    <p>Configura los dias y horas en los que atiendes</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <app-weekly-hours-editor
+    [days]="days()"
+    [isLoading]="isLoading()"
+    (dayToggled)="toggleDay($event)"
+    (dayTimesChanged)="onTimeChange($event)"
+  />
+</section>

@@ -1,19 +1,17 @@
-import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { GoagendaApiService } from './goagenda-api.service';
 import { SessionService } from './session.service';
+
+export interface SignUpResult {
+  needsEmailConfirmation: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseAuthService {
   private readonly client: SupabaseClient;
 
-  constructor(
-    private readonly sessionService: SessionService,
-    private readonly apiService: GoagendaApiService
-  ) {
+  constructor(private readonly sessionService: SessionService) {
     this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
   }
 
@@ -29,33 +27,25 @@ export class SupabaseAuthService {
     }
 
     this.sessionService.saveAccessToken(data.session.access_token);
-    await this.bootstrapBusinessContext(email);
   }
 
   /**
-   * Resuelve el negocio del usuario autenticado contra POST /businesses, que es
-   * idempotente: si ya existe uno para este owner lo devuelve, si no lo crea.
-   * Sin esto no hay business_id con el que llamar al resto de la API.
+   * Registra un usuario nuevo en Supabase Auth. Si el proyecto exige confirmar el correo,
+   * Supabase no devuelve sesion todavia y el usuario debe iniciar sesion despues de confirmar.
    */
-  private async bootstrapBusinessContext(email: string): Promise<void> {
-    try {
-      const business = await firstValueFrom(
-        this.apiService.crearNegocio({ name: `Negocio de ${email}` })
-      );
-      this.sessionService.setBusinessContext(business.id);
-    } catch (error) {
-      console.error('bootstrapBusinessContext failed:', error);
-      this.sessionService.clearSession();
+  async signUpWithPassword(email: string, password: string): Promise<SignUpResult> {
+    const { data, error } = await this.client.auth.signUp({ email, password });
 
-      const detail =
-        error instanceof HttpErrorResponse
-          ? `(${error.status}) ${error.error?.message ?? error.message}`
-          : error instanceof Error
-            ? error.message
-            : String(error);
-
-      throw new Error(`No fue posible cargar la informacion de tu negocio: ${detail}`);
+    if (error) {
+      throw new Error(error.message);
     }
+
+    if (data.session?.access_token) {
+      this.sessionService.saveAccessToken(data.session.access_token);
+      return { needsEmailConfirmation: false };
+    }
+
+    return { needsEmailConfirmation: true };
   }
 
   async signOut(): Promise<void> {

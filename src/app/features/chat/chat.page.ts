@@ -24,6 +24,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   @ViewChild('composerInput') private readonly composerInput?: ElementRef<HTMLTextAreaElement>;
 
   readonly businessName = signal('');
+  readonly employeeName = signal('');
   readonly enabled = signal(true);
   readonly isLoadingConfig = signal(true);
   readonly notFound = signal(false);
@@ -37,6 +38,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   readonly canSend = computed(() => this.enabled() && !this.isSending() && this.draft().trim().length > 0);
 
   private businessId = '';
+  private employeeId = '';
   private sessionId = '';
   private shouldScroll = false;
   private audioContext?: AudioContext;
@@ -48,6 +50,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   ngOnInit(): void {
     this.businessId = this.route.snapshot.paramMap.get('businessId') ?? '';
+    this.employeeId = this.route.snapshot.paramMap.get('employeeId') ?? '';
 
     if (!this.businessId) {
       this.notFound.set(true);
@@ -105,7 +108,9 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     this.queueScroll();
 
     try {
-      const respuesta = await firstValueFrom(this.apiService.sendChatMessage(this.businessId, this.sessionId, text));
+      const respuesta = await firstValueFrom(
+        this.apiService.sendChatMessage(this.businessId, this.sessionId, text, this.employeeId || undefined)
+      );
       this.messages.update((current) => [...current, { role: 'assistant', content: respuesta }]);
       this.playNotificationSound();
     } catch {
@@ -118,8 +123,9 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   private async bootstrap(): Promise<void> {
     try {
-      const config = await firstValueFrom(this.apiService.getChatConfig(this.businessId));
+      const config = await firstValueFrom(this.apiService.getChatConfig(this.businessId, this.employeeId || undefined));
       this.businessName.set(config.name);
+      this.employeeName.set(config.employee_name ?? '');
       this.enabled.set(config.enabled);
     } catch {
       this.notFound.set(true);
@@ -132,12 +138,14 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   }
 
   private async restoreOrCreateSession(): Promise<void> {
-    const storageKey = SESSION_KEY_PREFIX + this.businessId;
+    const storageKey = SESSION_KEY_PREFIX + this.businessId + (this.employeeId ? `_${this.employeeId}` : '');
     const storedSessionId = localStorage.getItem(storageKey);
 
     if (storedSessionId) {
       try {
-        const history = await firstValueFrom(this.apiService.getChatHistory(this.businessId, storedSessionId));
+        const history = await firstValueFrom(
+          this.apiService.getChatHistory(this.businessId, storedSessionId, this.employeeId || undefined)
+        );
         this.sessionId = storedSessionId;
         this.messages.set(history.map((message) => ({ role: this.normalizeRole(message.role), content: message.content })));
 
@@ -153,7 +161,7 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     }
 
     try {
-      const sessionId = await firstValueFrom(this.apiService.createChatSession(this.businessId));
+      const sessionId = await firstValueFrom(this.apiService.createChatSession(this.businessId, this.employeeId || undefined));
       this.sessionId = sessionId;
       localStorage.setItem(storageKey, sessionId);
       this.pushGreeting();

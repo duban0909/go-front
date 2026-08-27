@@ -23,20 +23,18 @@
       Comparte este enlace con tus clientes para que agenden citas hablando con tu asistente virtual.
     </p>
 
-    <div class="chat-link-row">
-      <input class="chat-link-input" type="text" [value]="chatLink()" readonly aria-label="Enlace de chat" />
-      <app-button type="button" variant="ghost" [fit]="true" (click)="copyLink()">
-        <app-lucide-icon [name]="linkCopied() ? 'circle-check-big' : 'copy'" [size]="18" [strokeWidth]="2" />
-        {{ linkCopied() ? 'Copiado' : 'Copiar' }}
-      </app-button>
-    </div>
-
     @if (!chatEnabled()) {
       <p class="chat-hint-warning">
         El agendamiento automatico aun no esta activo para tu plan. El enlace funciona, pero el asistente no podra
         agendar citas hasta activarlo.
       </p>
     }
+
+    <app-chat-link-qr-card
+      [chatLink]="chatLink()"
+      [businessName]="form.controls.name.value"
+      [whatsapp]="form.controls.phone_number.value"
+    />
   </article>
 
   <article class="card">

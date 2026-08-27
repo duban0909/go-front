@@ -1,0 +1,47 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Mi perfil</h1>
+    <p>Tu nombre y tu enlace de chat</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <article class="card">
+    <h2>
+      <span class="card-icon">
+        <app-lucide-icon name="user" [size]="20" [strokeWidth]="1.9" />
+      </span>
+      Mi nombre
+    </h2>
+
+    <form [formGroup]="nameForm" (ngSubmit)="saveName()" class="name-form">
+      <app-text-field label="Tu nombre" icon="user" [showLabel]="true" formControlName="name" />
+
+      @if (successMessage()) {
+        <p class="success-text">{{ successMessage() }}</p>
+      }
+
+      <app-button type="submit" [loading]="isSavingName()">
+        {{ isSavingName() ? 'Guardando...' : 'Guardar cambios' }}
+      </app-button>
+    </form>
+  </article>
+
+  <article class="card">
+    <h2>
+      <span class="card-icon">
+        <app-lucide-icon name="message-circle" [size]="20" [strokeWidth]="1.9" />
+      </span>
+      Mi enlace de chat
+    </h2>
+
+    <app-chat-link-qr-card [chatLink]="chatLink()" [businessName]="businessName()" [whatsapp]="whatsapp()" />
+  </article>
+
+  <button type="button" class="logout-card" (click)="logout()" [disabled]="isLoggingOut()">
+    <app-lucide-icon name="log-out" [size]="20" [strokeWidth]="2" />
+    {{ isLoggingOut() ? 'Cerrando sesion...' : 'Cerrar sesion' }}
+  </button>
+</section>

@@ -1,0 +1,39 @@
+<section class="page">
+  <header class="page-header">
+    <a routerLink="/business/employees" class="back-link" aria-label="Volver a empleados">
+      <app-lucide-icon name="chevron-left" [size]="20" [strokeWidth]="2.2" />
+    </a>
+    <div>
+      <h1>Servicios del empleado</h1>
+      <p>Elige que servicios puede agendar</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="hint-text">Cargando servicios...</p>
+  } @else {
+    <div class="service-checklist">
+      @for (service of allServices(); track service.id) {
+        <label class="service-row">
+          <input type="checkbox" [checked]="isSelected(service)" (change)="toggleService(service)" />
+          <span class="service-name">{{ service.name }}</span>
+          <span class="service-duration">{{ service.duration_minutes }} min</span>
+        </label>
+      } @empty {
+        <p class="hint-text">Este negocio todavia no tiene servicios registrados.</p>
+      }
+    </div>
+
+    @if (successMessage()) {
+      <p class="success-text">{{ successMessage() }}</p>
+    }
+
+    <app-button type="button" [loading]="isSaving()" (click)="save()">
+      {{ isSaving() ? 'Guardando...' : 'Guardar cambios' }}
+    </app-button>
+  }
+</section>

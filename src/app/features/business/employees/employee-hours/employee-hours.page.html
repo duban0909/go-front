@@ -1,0 +1,22 @@
+<section class="page">
+  <header class="page-header">
+    <a routerLink="/business/employees" class="back-link" aria-label="Volver a empleados">
+      <app-lucide-icon name="chevron-left" [size]="20" [strokeWidth]="2.2" />
+    </a>
+    <div>
+      <h1>Horario del empleado</h1>
+      <p>Configura los dias y horas en los que atiende</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <app-weekly-hours-editor
+    [days]="days()"
+    [isLoading]="isLoading()"
+    (dayToggled)="toggleDay($event)"
+    (dayTimesChanged)="onTimeChange($event)"
+  />
+</section>

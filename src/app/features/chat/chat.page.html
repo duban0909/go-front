@@ -16,7 +16,11 @@
       <div class="header-copy">
         <h1>{{ businessName() }}</h1>
         <span class="status" [class.offline]="!enabled()">
-          {{ enabled() ? 'Agenda tu cita por chat' : 'Agendamiento automatico no disponible' }}
+          @if (enabled() && employeeName()) {
+            Agendando con {{ employeeName() }}
+          } @else {
+            {{ enabled() ? 'Agenda tu cita por chat' : 'Agendamiento automatico no disponible' }}
+          }
         </span>
       </div>
       <button

@@ -1,0 +1,32 @@
+<main class="onboarding-page">
+  <section class="onboarding-wrap" aria-label="Ingresa tu codigo de invitacion">
+    <img src="/Logo.png" alt="GoAgenda" class="brand-logo" />
+
+    <header class="hero-copy">
+      <h1>Ingresa tu codigo</h1>
+      <p>Pide a quien te invito el codigo de 6 caracteres para vincular tu cuenta.</p>
+    </header>
+
+    <form (ngSubmit)="submit()" class="code-form">
+      <input
+        class="code-input"
+        type="text"
+        inputmode="text"
+        autocomplete="off"
+        maxlength="6"
+        placeholder="ABC123"
+        [value]="code()"
+        (input)="onCodeInput($event)"
+        aria-label="Codigo de invitacion"
+      />
+
+      @if (errorMessage()) {
+        <p class="auth-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <app-button type="submit" [disabled]="!canSubmit()" [loading]="isSubmitting()">
+        {{ isSubmitting() ? 'Validando...' : 'Validar' }}
+      </app-button>
+    </form>
+  </section>
+</main>

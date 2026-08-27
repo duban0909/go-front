@@ -33,6 +33,8 @@ export type LucideIconName =
   | 'message-circle'
   | 'volume-2'
   | 'volume-x'
+  | 'qr-code'
+  | 'download'
   | 'x';
 
 type IconElement =
@@ -269,6 +271,27 @@ const LUCIDE_ICONS: Record<LucideIconName, LucideIconData> = {
       path('m22 8-6 6'),
       path('m16 8 6 6')
     ]
+  },
+  'qr-code': {
+    viewBox: '0 0 24 24',
+    elements: [
+      rect(3, 3, 5, 5, 1),
+      rect(16, 3, 5, 5, 1),
+      rect(3, 16, 5, 5, 1),
+      path('M21 16h-3a2 2 0 0 0-2 2v3'),
+      path('M21 21v.01'),
+      path('M12 7v3a2 2 0 0 1-2 2H7'),
+      path('M3 12h.01'),
+      path('M12 3h.01'),
+      path('M12 16v.01'),
+      path('M16 12h1'),
+      path('M21 12v.01'),
+      path('M12 21v-1')
+    ]
+  },
+  download: {
+    viewBox: '0 0 24 24',
+    elements: [path('M12 15V3'), path('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'), path('m7 10 5 5 5-5')]
   },
   x: { viewBox: '0 0 24 24', elements: [path('M18 6 6 18'), path('m6 6 12 12')] }
 };

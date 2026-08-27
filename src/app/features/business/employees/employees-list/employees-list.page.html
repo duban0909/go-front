@@ -1,0 +1,109 @@
+<section class="page">
+  <header class="page-header">
+    <div>
+      <h1>Empleados</h1>
+      <p>Administra quien trabaja en tu negocio</p>
+    </div>
+    <app-button type="button" [fit]="true" (click)="openInviteModal()">
+      <app-lucide-icon name="plus" [size]="20" [strokeWidth]="2.2" />
+      Invitar empleado
+    </app-button>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="hint-text">Cargando empleados...</p>
+  } @else {
+    <div class="employee-list">
+      @for (employee of employees(); track employee.id) {
+        <article class="employee-card">
+          <div class="employee-row">
+            <div class="employee-info">
+              <h3>{{ employee.name || 'Sin nombre' }}</h3>
+              <div class="badge-row">
+                <span class="badge" [class.badge-owner]="employee.role === 'owner'">
+                  {{ employee.role === 'owner' ? 'Dueño' : 'Empleado' }}
+                </span>
+                <span class="badge" [class.badge-off]="!employee.active">
+                  {{ employee.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </div>
+            </div>
+
+            <button type="button" class="icon-btn" (click)="toggleExpanded(employee)" aria-label="Ver enlace de chat">
+              <app-lucide-icon [name]="expandedEmployeeId() === employee.id ? 'chevron-down' : 'chevron-right'" [size]="20" [strokeWidth]="2" />
+            </button>
+          </div>
+
+          <div class="employee-actions">
+            <a class="action-link" [routerLink]="['/business/employees', employee.id, 'hours']">
+              <app-lucide-icon name="clock" [size]="16" [strokeWidth]="2" />
+              Horario
+            </a>
+            <a class="action-link" [routerLink]="['/business/employees', employee.id, 'services']">
+              <app-lucide-icon name="scissors" [size]="16" [strokeWidth]="2" />
+              Servicios
+            </a>
+            @if (employee.role !== 'owner') {
+              <button type="button" class="action-link delete" (click)="askDelete(employee)">
+                <app-lucide-icon name="trash-2" [size]="16" [strokeWidth]="2" />
+                Eliminar
+              </button>
+            }
+          </div>
+
+          @if (expandedEmployeeId() === employee.id) {
+            <div class="chat-link-wrap">
+              <app-chat-link-qr-card [chatLink]="chatLinkFor(employee)" [businessName]="businessName()" [whatsapp]="whatsapp()" />
+            </div>
+          }
+        </article>
+      } @empty {
+        <p class="hint-text">Todavia no tienes empleados registrados.</p>
+      }
+    </div>
+  }
+</section>
+
+@if (isInviteModalOpen()) {
+  <app-modal title="Invitar empleado" (close)="closeInviteModal()">
+    <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-form">
+      <app-text-field label="Nombre sugerido (opcional)" placeholder="Ej. Daniela" formControlName="employee_name" />
+
+      <app-button type="submit" [loading]="isInviting()">
+        {{ isInviting() ? 'Generando...' : 'Generar codigo' }}
+      </app-button>
+    </form>
+  </app-modal>
+}
+
+@if (generatedCode()) {
+  <app-modal title="Codigo de invitacion" (close)="closeCodeModal()">
+    <div class="code-display">
+      <p class="code-value">{{ generatedCode() }}</p>
+      <app-button type="button" (click)="copyCode()">
+        <app-lucide-icon [name]="codeCopied() ? 'circle-check-big' : 'copy'" [size]="18" [strokeWidth]="2" />
+        {{ codeCopied() ? 'Copiado' : 'Copiar codigo' }}
+      </app-button>
+      <p class="hint-text">Comparte este codigo con tu empleado para que lo valide al registrarse.</p>
+    </div>
+  </app-modal>
+}
+
+@if (deleteTarget(); as target) {
+  <app-modal title="Eliminar empleado" (close)="cancelDelete()">
+    <div class="confirm-body">
+      <p>
+        ¿Eliminar a <strong>{{ target.name || 'este empleado' }}</strong>? Esta accion no se puede deshacer desde el
+        panel.
+      </p>
+      <div class="confirm-actions">
+        <app-button type="button" variant="ghost" (click)="cancelDelete()">Cancelar</app-button>
+        <app-button type="button" [loading]="isDeleting()" (click)="confirmDelete()">Eliminar</app-button>
+      </div>
+    </div>
+  </app-modal>
+}

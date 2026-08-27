@@ -4,11 +4,14 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GOAGENDA_API_URL } from '../config/goagenda-api.config';
 import {
+  AdminBusiness,
+  AdminBusinessCreate,
+  AdminBusinessCreateResponse,
+  AdminBusinessesListResponse,
+  AdminBusinessResponse,
   AiUsage,
   BaileysStatus,
-  Business,
-  BusinessCreate,
-  BusinessCreateResponse,
+  BlockedUpdate,
   BusinessHoursListResponse,
   BusinessInfoUpdate,
   BusinessSettings,
@@ -20,12 +23,31 @@ import {
   CreateSessionResponse,
   DayHour,
   DayHourUpdate,
+  Employee,
+  EmployeeDeleteResponse,
+  EmployeeHour,
+  EmployeeHoursListResponse,
+  EmployeeHourUpdate,
+  EmployeeHourUpdateResponse,
+  EmployeeInvitationCreate,
+  EmployeeServicesResponse,
+  EmployeeServicesUpdate,
+  EmployeeServicesUpdateResponse,
+  EmployeesListResponse,
+  EmployeeUpdate,
+  EmployeeUpdateResponse,
   ExcludedChat,
   ExcludedChatCreate,
   FcmTokenUpdate,
+  InvitationCode,
+  InvitationCodeResponse,
   ManualAppointmentInput,
+  MeResponse,
   PairingCodeInput,
   PairingCodeResponse,
+  QrCardInput,
+  RedeemInput,
+  RedeemResponse,
   ReminderConfigUpdate,
   ServiceCreate,
   ServiceItem,
@@ -37,11 +59,87 @@ import {
 export class GoagendaApiService {
   constructor(private readonly http: HttpClient) {}
 
-  // Negocio (self-service, idempotente: owner_id sale del token)
-  crearNegocio(payload: BusinessCreate): Observable<Business> {
+  // Sesion
+  getMe(): Observable<MeResponse> {
+    return this.http.get<MeResponse>(`${GOAGENDA_API_URL}/me`);
+  }
+
+  // Codigos de invitacion
+  redeemInvitationCode(payload: RedeemInput): Observable<RedeemResponse> {
+    return this.http.post<RedeemResponse>(`${GOAGENDA_API_URL}/invitation-codes/redeem`, payload);
+  }
+
+  createEmployeeInvitationCode(businessId: string, payload: EmployeeInvitationCreate): Observable<InvitationCode> {
     return this.http
-      .post<BusinessCreateResponse>(`${GOAGENDA_API_URL}/businesses`, payload)
+      .post<InvitationCodeResponse>(`${GOAGENDA_API_URL}/businesses/${businessId}/invitation-codes`, payload)
+      .pipe(map((response) => response.invitation_code));
+  }
+
+  // Super admin
+  adminListBusinesses(): Observable<AdminBusiness[]> {
+    return this.http
+      .get<AdminBusinessesListResponse>(`${GOAGENDA_API_URL}/admin/businesses`)
+      .pipe(map((response) => response.businesses));
+  }
+
+  adminCreateBusiness(payload: AdminBusinessCreate): Observable<AdminBusiness> {
+    return this.http
+      .post<AdminBusinessCreateResponse>(`${GOAGENDA_API_URL}/admin/businesses`, payload)
       .pipe(map((response) => response.business));
+  }
+
+  adminSetBusinessBlocked(businessId: string, blocked: boolean): Observable<AdminBusiness> {
+    const payload: BlockedUpdate = { blocked };
+    return this.http
+      .put<AdminBusinessResponse>(`${GOAGENDA_API_URL}/admin/businesses/${businessId}/blocked`, payload)
+      .pipe(map((response) => response.business));
+  }
+
+  adminCreateOwnerInvitationCode(businessId: string): Observable<InvitationCode> {
+    return this.http
+      .post<InvitationCodeResponse>(`${GOAGENDA_API_URL}/admin/businesses/${businessId}/invitation-codes`, {})
+      .pipe(map((response) => response.invitation_code));
+  }
+
+  // Empleados
+  listEmployees(businessId: string): Observable<Employee[]> {
+    return this.http
+      .get<EmployeesListResponse>(`${GOAGENDA_API_URL}/employees`, { params: { business_id: businessId } })
+      .pipe(map((response) => response.employees));
+  }
+
+  updateEmployee(employeeId: string, payload: EmployeeUpdate): Observable<Employee> {
+    return this.http
+      .put<EmployeeUpdateResponse>(`${GOAGENDA_API_URL}/employees/${employeeId}`, payload)
+      .pipe(map((response) => response.employee));
+  }
+
+  deleteEmployee(employeeId: string): Observable<EmployeeDeleteResponse> {
+    return this.http.delete<EmployeeDeleteResponse>(`${GOAGENDA_API_URL}/employees/${employeeId}`);
+  }
+
+  getEmployeeHours(employeeId: string): Observable<EmployeeHour[]> {
+    return this.http
+      .get<EmployeeHoursListResponse>(`${GOAGENDA_API_URL}/employees/${employeeId}/hours`)
+      .pipe(map((response) => response.employee_hours));
+  }
+
+  updateEmployeeHours(employeeId: string, payload: EmployeeHourUpdate): Observable<EmployeeHour> {
+    return this.http
+      .put<EmployeeHourUpdateResponse>(`${GOAGENDA_API_URL}/employees/${employeeId}/hours`, payload)
+      .pipe(map((response) => response.employee_hour));
+  }
+
+  getEmployeeServices(employeeId: string): Observable<ServiceItem[]> {
+    return this.http
+      .get<EmployeeServicesResponse>(`${GOAGENDA_API_URL}/employees/${employeeId}/services`)
+      .pipe(map((response) => response.services));
+  }
+
+  updateEmployeeServices(employeeId: string, payload: EmployeeServicesUpdate): Observable<ServiceItem[]> {
+    return this.http
+      .put<EmployeeServicesUpdateResponse>(`${GOAGENDA_API_URL}/employees/${employeeId}/services`, payload)
+      .pipe(map((response) => response.services));
   }
 
   // Servicios
@@ -139,28 +237,37 @@ export class GoagendaApiService {
     return this.http.post<PairingCodeResponse>(`${GOAGENDA_API_URL}/baileys/pairing-code`, payload);
   }
 
-  // Chat publico de agendamiento
-  getChatConfig(businessId: string): Observable<ChatConfig> {
-    return this.http.get<ChatConfig>(`${GOAGENDA_API_URL}/chat/${businessId}/config`);
+  // Chat publico de agendamiento (variante general o por empleado, segun employeeId)
+  private chatBasePath(businessId: string, employeeId?: string): string {
+    return employeeId ? `${GOAGENDA_API_URL}/chat/${businessId}/${employeeId}` : `${GOAGENDA_API_URL}/chat/${businessId}`;
   }
 
-  createChatSession(businessId: string): Observable<string> {
+  getChatConfig(businessId: string, employeeId?: string): Observable<ChatConfig> {
+    return this.http.get<ChatConfig>(`${this.chatBasePath(businessId, employeeId)}/config`);
+  }
+
+  createChatSession(businessId: string, employeeId?: string): Observable<string> {
     return this.http
-      .post<CreateSessionResponse>(`${GOAGENDA_API_URL}/chat/${businessId}/sessions`, {})
+      .post<CreateSessionResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions`, {})
       .pipe(map((response) => response.session_id));
   }
 
-  sendChatMessage(businessId: string, sessionId: string, mensaje: string): Observable<string> {
+  sendChatMessage(businessId: string, sessionId: string, mensaje: string, employeeId?: string): Observable<string> {
     return this.http
-      .post<ChatMessageResponse>(`${GOAGENDA_API_URL}/chat/${businessId}/sessions/${sessionId}/messages`, {
+      .post<ChatMessageResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`, {
         mensaje
       })
       .pipe(map((response) => response.respuesta));
   }
 
-  getChatHistory(businessId: string, sessionId: string): Observable<ChatHistoryMessage[]> {
+  getChatHistory(businessId: string, sessionId: string, employeeId?: string): Observable<ChatHistoryMessage[]> {
     return this.http
-      .get<ChatHistoryResponse>(`${GOAGENDA_API_URL}/chat/${businessId}/sessions/${sessionId}/messages`)
+      .get<ChatHistoryResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`)
       .pipe(map((response) => response.mensajes));
+  }
+
+  // Tarjeta QR para imprimir
+  generateQrCard(payload: QrCardInput): Observable<Blob> {
+    return this.http.post(`${GOAGENDA_API_URL}/qr-card`, payload, { responseType: 'blob' });
   }
 }

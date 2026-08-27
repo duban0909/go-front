@@ -1,0 +1,93 @@
+<section class="page">
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <article class="calendar-card">
+    <div class="calendar-nav">
+      <button type="button" class="nav-btn" (click)="shiftWeek(-7)" aria-label="Semana anterior">
+        <app-lucide-icon name="chevron-left" [size]="20" [strokeWidth]="2.2" />
+      </button>
+      <h2>{{ monthLabel() }}</h2>
+      <button type="button" class="nav-btn" (click)="shiftWeek(7)" aria-label="Semana siguiente">
+        <app-lucide-icon name="chevron-right" [size]="20" [strokeWidth]="2.2" />
+      </button>
+    </div>
+
+    <div class="week-grid">
+      @for (day of weekDays(); track day.getTime()) {
+        <button type="button" class="day-cell" (click)="selectDate(day)">
+          <span class="weekday">{{ weekdayLabel(day) }}</span>
+          <span class="day-number" [class.is-today]="isTodayDate(day)">{{ day.getDate() }}</span>
+          @if (isSelected(day)) {
+            <span class="selected-dot"></span>
+          }
+        </button>
+      }
+    </div>
+  </article>
+
+  <div class="selected-date-bar">
+    <span class="selected-date-icon">
+      <app-lucide-icon name="calendar" [size]="18" [strokeWidth]="2" />
+    </span>
+    <span class="selected-date-text">{{ fullDateLabel() }}</span>
+    @if (isToday()) {
+      <span class="today-pill">Hoy</span>
+    }
+  </div>
+
+  <div class="appointments-area">
+    @if (isLoading()) {
+      <div class="appointment-list" aria-hidden="true">
+        @for (row of [0, 1]; track row) {
+          <article class="appointment-card skeleton-card">
+            <span class="appointment-icon skeleton-block"></span>
+            <div class="appointment-body">
+              <div class="skeleton-line" style="width: 50%; height: 1rem"></div>
+              <div class="skeleton-line" style="width: 35%; margin-top: 0.5rem"></div>
+              <div class="skeleton-line" style="width: 70%; margin-top: 0.6rem"></div>
+            </div>
+          </article>
+        }
+      </div>
+    } @else if (appointmentsForSelectedDay().length === 0) {
+      <p class="empty-state">No tienes citas para este dia</p>
+    } @else {
+      <div class="appointment-list">
+        @for (appointment of appointmentsForSelectedDay(); track appointment.id) {
+          <article class="appointment-card" [class]="'status-' + appointment.status">
+            <span class="appointment-icon">
+              <app-lucide-icon name="clock" [size]="20" [strokeWidth]="1.9" />
+            </span>
+
+            <div class="appointment-body">
+              <div class="appointment-top">
+                <div class="appointment-info">
+                  <h3>{{ appointment.clientName }}</h3>
+                  <p class="appointment-service">{{ appointment.serviceName }}</p>
+                </div>
+                <span class="status-badge" [class]="'status-badge-' + appointment.status">
+                  {{ statusLabel(appointment.status) }}
+                </span>
+              </div>
+
+              <div class="appointment-bottom">
+                <span class="appointment-time">
+                  <app-lucide-icon name="clock" [size]="15" [strokeWidth]="2" />
+                  {{ appointment.time }}
+                </span>
+                <span class="appointment-price">{{ appointment.price | copCurrency }}</span>
+              </div>
+
+              <span class="appointment-phone">
+                <app-lucide-icon name="phone" [size]="15" [strokeWidth]="2" />
+                {{ appointment.clientPhone }}
+              </span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>

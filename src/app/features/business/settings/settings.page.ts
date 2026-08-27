@@ -5,13 +5,14 @@ import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { SessionService } from '../../../core/services/session.service';
 import { SupabaseAuthService } from '../../../core/services/supabase-auth.service';
+import { ChatLinkQrCardComponent } from '../../../shared/components/chat-link-qr-card/chat-link-qr-card.component';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { UiTextFieldComponent } from '../../../shared/components/ui-text-field/ui-text-field.component';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [ReactiveFormsModule, LucideIconComponent, UiButtonComponent, UiTextFieldComponent],
+  imports: [ReactiveFormsModule, LucideIconComponent, UiButtonComponent, UiTextFieldComponent, ChatLinkQrCardComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.css'
 })
@@ -23,7 +24,6 @@ export class SettingsPageComponent implements OnInit {
   readonly successMessage = signal('');
 
   readonly chatEnabled = signal(false);
-  readonly linkCopied = signal(false);
 
   readonly form;
 
@@ -62,22 +62,6 @@ export class SettingsPageComponent implements OnInit {
       this.chatEnabled.set(config.enabled);
     } catch {
       this.chatEnabled.set(false);
-    }
-  }
-
-  async copyLink(): Promise<void> {
-    const link = this.chatLink();
-
-    if (!link) {
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(link);
-      this.linkCopied.set(true);
-      setTimeout(() => this.linkCopied.set(false), 2000);
-    } catch {
-      this.error.set('No se pudo copiar el enlace.');
     }
   }
 

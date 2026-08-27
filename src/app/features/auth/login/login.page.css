@@ -65,6 +65,19 @@ h1 {
   font-size: 0.9rem;
 }
 
+.auth-switch {
+  margin: 1.3rem 0 0;
+  text-align: center;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.9rem;
+}
+
+.auth-switch a {
+  color: var(--go-teal);
+  font-weight: 700;
+  text-decoration: none;
+}
+
 @keyframes fade-in-up {
   from {
     opacity: 0;

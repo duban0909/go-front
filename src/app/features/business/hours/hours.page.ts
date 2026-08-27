@@ -5,40 +5,16 @@ import { GoagendaApiService } from '../../../core/services/goagenda-api.service'
 import { SessionService } from '../../../core/services/session.service';
 import { DayHour } from '../../../core/models/goagenda.models';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
+import { DayRowView, WeeklyHoursEditorComponent } from '../../../shared/components/weekly-hours-editor/weekly-hours-editor.component';
+import { DAY_DEFS, toApiTime, toInputTime } from '../../../shared/utils/day-hours';
 
-interface DayRow {
-  key: string;
-  label: string;
-  isOpen: boolean;
-  openingTime: string;
-  closingTime: string;
-  lunchStart: string;
-  lunchEnd: string;
-}
-
-const DAY_DEFS = [
-  { key: 'mon', label: 'Lunes' },
-  { key: 'tue', label: 'Martes' },
-  { key: 'wed', label: 'Miercoles' },
-  { key: 'thu', label: 'Jueves' },
-  { key: 'fri', label: 'Viernes' },
-  { key: 'sat', label: 'Sabado' },
-  { key: 'sun', label: 'Domingo' }
-];
+type DayRow = DayRowView;
 
 const REMINDER_OPTIONS = [1, 2, 3, 6, 12, 24, 48];
 
-function toInputTime(value: string | null, fallback: string): string {
-  return value ? value.slice(0, 5) : fallback;
-}
-
-function toApiTime(value: string): string {
-  return value.length === 5 ? `${value}:00` : value;
-}
-
 @Component({
   selector: 'app-hours-page',
-  imports: [FormsModule, LucideIconComponent],
+  imports: [FormsModule, LucideIconComponent, WeeklyHoursEditorComponent],
   templateUrl: './hours.page.html',
   styleUrl: './hours.page.css'
 })

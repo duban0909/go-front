@@ -116,6 +116,16 @@
       </label>
 
       <label class="field-label">
+        Empleado
+        <select formControlName="employee_id" class="service-select">
+          <option value="" disabled>Selecciona un empleado</option>
+          @for (employee of employees(); track employee.id) {
+            <option [value]="employee.id">{{ employee.name || 'Sin nombre' }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field-label">
         Hora
         <input type="time" formControlName="time" class="time-input" />
       </label>

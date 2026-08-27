@@ -1,0 +1,25 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Mis servicios</h1>
+    <p>Los servicios que puedes agendar. Solo el dueño puede editarlos.</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="hint-text">Cargando servicios...</p>
+  } @else {
+    <ul class="service-list">
+      @for (service of services(); track service.id) {
+        <li>
+          <span class="service-name">{{ service.name }}</span>
+          <span class="service-duration">{{ service.duration_minutes }} min</span>
+        </li>
+      } @empty {
+        <li class="hint-text">Todavia no tienes servicios asignados.</li>
+      }
+    </ul>
+  }
+</section>

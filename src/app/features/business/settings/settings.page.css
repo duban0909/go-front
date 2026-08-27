@@ -59,23 +59,9 @@
   color: color-mix(in srgb, var(--go-dark) 65%, white);
 }
 
-.chat-link-row {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
+app-chat-link-qr-card {
+  display: block;
   margin-top: 0.7rem;
-}
-
-.chat-link-input {
-  flex: 1;
-  min-width: 0;
-  border: 1px solid color-mix(in srgb, var(--go-dark) 15%, white);
-  border-radius: 0.8rem;
-  padding: 0.7rem 0.85rem;
-  background: var(--go-bg);
-  color: var(--go-charcoal);
-  font-size: 0.85rem;
-  font-family: inherit;
 }
 
 .chat-hint-warning {

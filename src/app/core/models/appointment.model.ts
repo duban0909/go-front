@@ -4,6 +4,7 @@ export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancell
 export interface AppointmentRecord {
   id: string;
   business_id: string;
+  employee_id: string | null;
   client_name: string;
   client_phone: string;
   service_id: string;

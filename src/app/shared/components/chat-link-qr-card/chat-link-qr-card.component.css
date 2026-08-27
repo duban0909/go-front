@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+
+.error-banner {
+  margin: 0;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, #bd2e2e 28%, white);
+  background: color-mix(in srgb, #bd2e2e 8%, white);
+  color: #7f2121;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.chat-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.chat-link-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--go-dark) 15%, white);
+  border-radius: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  background: var(--go-bg);
+  color: var(--go-charcoal);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.qr-section {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.9rem;
+}
+
+.qr-preview {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 1rem;
+  border-radius: 0.9rem;
+  background: var(--go-bg);
+  border: 1px solid color-mix(in srgb, var(--go-dark) 12%, white);
+}
+
+.qr-preview img {
+  width: 100%;
+  max-width: 260px;
+  border-radius: 0.6rem;
+}

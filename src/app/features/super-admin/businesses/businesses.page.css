@@ -1,0 +1,196 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--go-bg);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding: 1.1rem 1.15rem;
+  background: var(--go-navy);
+}
+
+.brand-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.brand-mark {
+  color: var(--go-teal);
+}
+
+.brand-name {
+  margin: 0;
+  color: #fff;
+  font-family: Sora, Manrope, sans-serif;
+  font-weight: 600;
+  font-size: 1.15rem;
+  letter-spacing: -0.01em;
+}
+
+.brand-name strong {
+  font-weight: 800;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  opacity: 0.85;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.logout-btn:disabled {
+  opacity: 0.5;
+}
+
+.page-body {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 1.1rem 1.15rem 3rem;
+  display: grid;
+  gap: 1.1rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.page-header h1 {
+  margin: 0 0 0.2rem;
+  color: var(--go-navy);
+  font-size: 1.6rem;
+}
+
+.page-header p {
+  margin: 0;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.92rem;
+}
+
+.error-banner {
+  margin: 0;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, #bd2e2e 28%, white);
+  background: color-mix(in srgb, #bd2e2e 8%, white);
+  color: #7f2121;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.hint-text {
+  color: color-mix(in srgb, var(--go-dark) 60%, white);
+  font-size: 0.92rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.business-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.business-card {
+  background: #fff;
+  border-radius: var(--go-radius-lg);
+  box-shadow: 0 4px 14px rgb(16 32 64 / 6%);
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.business-info h3 {
+  margin: 0 0 0.4rem;
+  color: var(--go-navy);
+  font-size: 1.05rem;
+}
+
+.badge-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.badge-off {
+  background: color-mix(in srgb, var(--go-dark) 12%, white);
+  color: color-mix(in srgb, var(--go-dark) 65%, white);
+}
+
+.badge-blocked {
+  background: color-mix(in srgb, #bd2e2e 14%, white);
+  color: #bd2e2e;
+}
+
+.business-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.modal-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.code-display {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  text-align: center;
+}
+
+.code-value {
+  margin: 0;
+  font-size: 2.4rem;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--go-navy);
+}
+
+.confirm-body {
+  display: grid;
+  gap: 1.1rem;
+}
+
+.confirm-body p {
+  margin: 0;
+  color: var(--go-charcoal);
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+@media (min-width: 900px) {
+  .page-body {
+    padding: 1.5rem 2rem 2.5rem;
+  }
+}

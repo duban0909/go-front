@@ -1,0 +1,28 @@
+<div class="chat-link-row">
+  <input class="chat-link-input" type="text" [value]="chatLink" readonly aria-label="Enlace de chat" />
+  <app-button type="button" variant="ghost" [fit]="true" (click)="copyLink()">
+    <app-lucide-icon [name]="linkCopied() ? 'circle-check-big' : 'copy'" [size]="18" [strokeWidth]="2" />
+    {{ linkCopied() ? 'Copiado' : 'Copiar' }}
+  </app-button>
+</div>
+
+<div class="qr-section">
+  <app-button type="button" variant="ghost" [fit]="true" [loading]="isGeneratingQr()" (click)="generateQrCard()">
+    <app-lucide-icon name="qr-code" [size]="18" [strokeWidth]="2" />
+    {{ isGeneratingQr() ? 'Generando...' : 'Generar QR' }}
+  </app-button>
+
+  @if (qrError()) {
+    <p class="error-banner" role="alert">{{ qrError() }}</p>
+  }
+
+  @if (qrCardImage()) {
+    <div class="qr-preview">
+      <img [src]="qrCardImage()" alt="Tarjeta QR del enlace de chat" />
+      <app-button type="button" [fit]="true" (click)="downloadQrCard()">
+        <app-lucide-icon name="download" [size]="18" [strokeWidth]="2" />
+        Descargar QR
+      </app-button>
+    </div>
+  }
+</div>

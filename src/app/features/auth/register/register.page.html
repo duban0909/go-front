@@ -1,0 +1,63 @@
+<main class="mobile-login">
+  <section class="login-wrap" aria-label="Crear cuenta GoAgenda">
+    <img src="/Logo.png" alt="GoAgenda" class="brand-logo" />
+
+    <header class="hero-copy">
+      <h1>Crea tu cuenta</h1>
+      <p>Registrate y valida tu codigo de invitacion para empezar</p>
+    </header>
+
+    @if (needsEmailConfirmation()) {
+      <p class="auth-info" role="status">
+        Revisa tu correo para confirmar tu cuenta antes de iniciar sesion.
+      </p>
+      <a routerLink="/auth/login" class="auth-switch-link">Ir a iniciar sesion</a>
+    } @else {
+      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+        <app-text-field
+          label="Correo"
+          icon="mail"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder="Correo"
+          formControlName="email"
+          [error]="fieldError('email')"
+        />
+
+        <app-text-field
+          label="Contrasena"
+          icon="lock"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Contrasena"
+          formControlName="password"
+          [error]="fieldError('password')"
+        />
+
+        <app-text-field
+          label="Confirmar contrasena"
+          icon="lock"
+          type="password"
+          autocomplete="new-password"
+          placeholder="Confirmar contrasena"
+          formControlName="confirm_password"
+          [error]="fieldError('confirm_password')"
+        />
+
+        @if (errorMessage()) {
+          <p class="auth-error" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <app-button type="submit" [loading]="isLoading()">
+          {{ isLoading() ? 'Creando cuenta...' : 'Crear cuenta' }}
+        </app-button>
+      </form>
+
+      <p class="auth-switch">
+        ¿Ya tienes cuenta?
+        <a routerLink="/auth/login">Inicia sesion</a>
+      </p>
+    }
+  </section>
+</main>

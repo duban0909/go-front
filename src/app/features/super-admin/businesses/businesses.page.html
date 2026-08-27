@@ -1,0 +1,111 @@
+<section class="page">
+  <header class="topbar">
+    <div class="brand-wrap">
+      <app-lucide-icon name="calendar-check" [size]="22" [strokeWidth]="2.2" class="brand-mark" />
+      <p class="brand-name">Go <strong>Agenda</strong></p>
+    </div>
+    <button type="button" class="logout-btn" (click)="logout()" [disabled]="isLoggingOut()">
+      <app-lucide-icon name="log-out" [size]="18" [strokeWidth]="2" />
+      {{ isLoggingOut() ? 'Cerrando sesion...' : 'Cerrar sesion' }}
+    </button>
+  </header>
+
+  <div class="page-body">
+    <header class="page-header">
+      <div>
+        <h1>Negocios</h1>
+        <p>Crea negocios y administra sus codigos de invitacion</p>
+      </div>
+      <app-button type="button" [fit]="true" (click)="openCreateModal()">
+        <app-lucide-icon name="plus" [size]="20" [strokeWidth]="2.2" />
+        Nuevo negocio
+      </app-button>
+    </header>
+
+    @if (error()) {
+      <p class="error-banner" role="alert">{{ error() }}</p>
+    }
+
+    @if (isLoading()) {
+      <p class="hint-text">Cargando negocios...</p>
+    } @else {
+      <div class="business-list">
+        @for (business of businesses(); track business.id) {
+          <article class="business-card">
+            <div class="business-info">
+              <h3>{{ business.name }}</h3>
+              <div class="badge-row">
+                <span class="badge" [class.badge-off]="!business.owner_id">
+                  {{ business.owner_id ? 'Con dueño' : 'Sin dueño' }}
+                </span>
+                @if (business.blocked) {
+                  <span class="badge badge-blocked">Bloqueado</span>
+                }
+              </div>
+            </div>
+
+            <div class="business-actions">
+              <app-button type="button" variant="ghost" [fit]="true" (click)="generateOwnerCode(business)">
+                <app-lucide-icon name="send" [size]="16" [strokeWidth]="2" />
+                Generar codigo de dueño
+              </app-button>
+              <app-button type="button" variant="ghost" [fit]="true" (click)="askToggleBlock(business)">
+                <app-lucide-icon [name]="business.blocked ? 'circle-check-big' : 'x'" [size]="16" [strokeWidth]="2" />
+                {{ business.blocked ? 'Desbloquear' : 'Bloquear' }}
+              </app-button>
+            </div>
+          </article>
+        } @empty {
+          <p class="hint-text">Todavia no hay negocios registrados.</p>
+        }
+      </div>
+    }
+  </div>
+</section>
+
+@if (isCreateModalOpen()) {
+  <app-modal title="Nuevo negocio" (close)="closeCreateModal()">
+    <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="modal-form">
+      <app-text-field label="Nombre del negocio" placeholder="Ej. Barberia Central" formControlName="name" />
+      <app-text-field label="Tipo de negocio (opcional)" placeholder="Ej. Barberia" formControlName="business_type" />
+
+      <app-button type="submit" [loading]="isSaving()">
+        {{ isSaving() ? 'Creando...' : 'Crear negocio' }}
+      </app-button>
+    </form>
+  </app-modal>
+}
+
+@if (generatedCode()) {
+  <app-modal title="Codigo de invitacion" (close)="closeCodeModal()">
+    <div class="code-display">
+      <p class="code-value">{{ generatedCode() }}</p>
+      <app-button type="button" (click)="copyCode()">
+        <app-lucide-icon [name]="codeCopied() ? 'circle-check-big' : 'copy'" [size]="18" [strokeWidth]="2" />
+        {{ codeCopied() ? 'Copiado' : 'Copiar codigo' }}
+      </app-button>
+      <p class="hint-text">Comparte este codigo con el futuro dueño para que lo valide al registrarse.</p>
+    </div>
+  </app-modal>
+}
+
+@if (blockTarget(); as target) {
+  <app-modal title="Confirmar" (close)="cancelToggleBlock()">
+    <div class="confirm-body">
+      <p>
+        @if (target.blocked) {
+          ¿Desbloquear <strong>{{ target.name }}</strong>? Su panel y chat publico volveran a estar disponibles.
+        } @else {
+          ¿Bloquear <strong>{{ target.name }}</strong>? Esto apagara el chat publico y el panel del dueño de este
+          negocio de inmediato.
+        }
+      </p>
+      <div class="confirm-actions">
+        <app-button type="button" variant="ghost" (click)="cancelToggleBlock()">Cancelar</app-button>
+        <app-button type="button" [loading]="isTogglingBlock()" (click)="confirmToggleBlock()">
+          {{ target.blocked ? 'Desbloquear' : 'Bloquear' }}
+        </app-button>
+      </div>
+    </div>
+  </app-modal>
+}

@@ -1,0 +1,265 @@
+:host {
+  display: block;
+}
+
+.page {
+  display: grid;
+  gap: 0;
+  padding-bottom: 2rem;
+}
+
+.error-banner {
+  margin: 1.1rem 1.1rem 0;
+  border-radius: 0.9rem;
+  border: 1px solid color-mix(in srgb, #bd2e2e 28%, white);
+  background: color-mix(in srgb, #bd2e2e 8%, white);
+  color: #7f2121;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.88rem;
+}
+
+.calendar-card {
+  background: #fff;
+  border-radius: 0 0 var(--go-radius-lg) var(--go-radius-lg);
+  padding: 1rem 0.8rem 1.2rem;
+  box-shadow: 0 6px 18px rgb(16 32 64 / 6%);
+}
+
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.4rem 0.9rem;
+}
+
+.calendar-nav h2 {
+  margin: 0;
+  color: var(--go-navy);
+  font-size: 1.15rem;
+}
+
+.nav-btn {
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.7rem;
+  border: 0;
+  background: var(--go-bg);
+  color: var(--go-dark);
+  display: grid;
+  place-items: center;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.day-cell {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  padding: 0.3rem 0.1rem;
+}
+
+.weekday {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--go-dark) 50%, white);
+}
+
+.day-number {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  color: var(--go-navy);
+  font-weight: 700;
+}
+
+.day-number.is-today {
+  background: var(--go-teal);
+  color: #fff;
+}
+
+.selected-dot {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  background: var(--go-teal);
+  margin-top: -0.35rem;
+}
+
+.selected-date-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1.1rem 1.1rem 0.9rem;
+}
+
+.selected-date-icon {
+  width: 2.1rem;
+  height: 2.1rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.6rem;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+}
+
+.selected-date-text {
+  flex: 1;
+  color: var(--go-navy);
+  font-weight: 700;
+  font-size: 0.98rem;
+}
+
+.today-pill {
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.appointments-area {
+  padding: 0 1.1rem;
+  min-height: 14rem;
+}
+
+.empty-state {
+  margin-top: 4.5rem;
+  text-align: center;
+  color: color-mix(in srgb, var(--go-dark) 55%, white);
+  font-size: 0.95rem;
+}
+
+.appointment-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.appointment-card {
+  display: flex;
+  gap: 0.8rem;
+  background: #fff;
+  border-radius: var(--go-radius-lg);
+  border-left: 4px solid var(--go-teal);
+  box-shadow: 0 4px 14px rgb(16 32 64 / 6%);
+  padding: 1rem 1.1rem;
+}
+
+.appointment-card.status-pending {
+  border-left-color: #d99a1f;
+}
+
+.appointment-card.status-cancelled {
+  border-left-color: color-mix(in srgb, var(--go-dark) 35%, white);
+}
+
+.appointment-card.status-completed {
+  border-left-color: var(--go-navy);
+}
+
+.appointment-icon {
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+}
+
+.appointment-body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.appointment-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.4rem 0.5rem;
+}
+
+.appointment-info {
+  flex: 1 1 8rem;
+  min-width: 0;
+}
+
+.appointment-top h3 {
+  margin: 0;
+  color: var(--go-navy);
+  font-size: 1.02rem;
+}
+
+.appointment-service {
+  margin: 0.1rem 0 0;
+  color: color-mix(in srgb, var(--go-dark) 60%, white);
+  font-size: 0.85rem;
+}
+
+.status-badge {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status-badge-pending {
+  background: color-mix(in srgb, #d99a1f 16%, white);
+  color: #a06c0f;
+}
+
+.status-badge-cancelled {
+  background: var(--go-bg);
+  color: color-mix(in srgb, var(--go-dark) 55%, white);
+}
+
+.status-badge-completed {
+  background: color-mix(in srgb, var(--go-navy) 12%, white);
+  color: var(--go-navy);
+}
+
+.appointment-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.appointment-time {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: color-mix(in srgb, var(--go-dark) 62%, white);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.appointment-price {
+  color: var(--go-teal);
+  font-weight: 800;
+}
+
+.appointment-phone {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: color-mix(in srgb, var(--go-dark) 60%, white);
+  font-size: 0.85rem;
+}

@@ -20,4 +20,18 @@ export class SupabaseAppointmentsService {
 
     return (data ?? []) as AppointmentRecord[];
   }
+
+  async listByEmployee(employeeId: string): Promise<AppointmentRecord[]> {
+    const { data, error } = await this.client
+      .from('appointments')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .order('scheduled_at', { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data ?? []) as AppointmentRecord[];
+  }
 }
