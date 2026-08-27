@@ -1,8 +1,9 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { GOAGENDA_API_URL } from '../config/goagenda-api.config';
+import { AppointmentsListResponse, ListAppointmentsParams } from '../models/appointment.model';
 import {
   AdminBusiness,
   AdminBusinessCreate,
@@ -224,6 +225,31 @@ export class GoagendaApiService {
   // Citas
   createManualAppointment(payload: ManualAppointmentInput): Observable<unknown> {
     return this.http.post(`${GOAGENDA_API_URL}/appointments/manual`, payload);
+  }
+
+  listAppointments(params: ListAppointmentsParams): Observable<AppointmentsListResponse> {
+    let httpParams = new HttpParams().set('business_id', params.business_id);
+
+    if (params.employee_id) {
+      httpParams = httpParams.set('employee_id', params.employee_id);
+    }
+    if (params.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params.date_from) {
+      httpParams = httpParams.set('date_from', params.date_from);
+    }
+    if (params.date_to) {
+      httpParams = httpParams.set('date_to', params.date_to);
+    }
+    if (params.limit != null) {
+      httpParams = httpParams.set('limit', params.limit);
+    }
+    if (params.offset != null) {
+      httpParams = httpParams.set('offset', params.offset);
+    }
+
+    return this.http.get<AppointmentsListResponse>(`${GOAGENDA_API_URL}/appointments`, { params: httpParams });
   }
 
   // Vinculacion de WhatsApp (Baileys)

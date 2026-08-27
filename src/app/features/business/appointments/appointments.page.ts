@@ -3,7 +3,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { SessionService } from '../../../core/services/session.service';
-import { SupabaseAppointmentsService } from '../../../core/services/supabase-appointments.service';
 import { AppointmentStatus } from '../../../core/models/appointment.model';
 import { Employee, ServiceItem } from '../../../core/models/goagenda.models';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
@@ -23,6 +22,8 @@ import {
 
 interface AppointmentView {
   id: string;
+  employeeId: string | null;
+  employeeName: string;
   clientName: string;
   clientPhone: string;
   serviceName: string;
@@ -55,6 +56,7 @@ export class AppointmentsPageComponent implements OnInit {
   readonly isModalOpen = signal(false);
   readonly isSaving = signal(false);
   readonly error = signal('');
+  readonly agendaFilter = signal('');
 
   readonly weekDays = computed(() => getWeekDays(this.selectedDate()));
   readonly monthLabel = computed(() => formatMonthYear(this.selectedDate()));
@@ -62,7 +64,10 @@ export class AppointmentsPageComponent implements OnInit {
   readonly isToday = computed(() => isSameDay(this.selectedDate(), this.today));
   readonly appointmentsForSelectedDay = computed(() => {
     const dateKey = toDateKey(this.selectedDate());
-    return this.appointments().filter((appointment) => appointment.dateKey === dateKey);
+    const filter = this.agendaFilter();
+    return this.appointments().filter(
+      (appointment) => appointment.dateKey === dateKey && (!filter || appointment.employeeId === filter)
+    );
   });
 
   readonly form;
@@ -70,7 +75,6 @@ export class AppointmentsPageComponent implements OnInit {
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly apiService: GoagendaApiService,
-    private readonly appointmentsService: SupabaseAppointmentsService,
     private readonly sessionService: SessionService
   ) {
     this.form = this.formBuilder.nonNullable.group({
@@ -127,20 +131,20 @@ export class AppointmentsPageComponent implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const records = await this.appointmentsService.listByBusiness(businessId);
-      const servicesById = new Map(this.services().map((service) => [service.id, service]));
+      const response = await firstValueFrom(this.apiService.listAppointments({ business_id: businessId, limit: 200 }));
 
       this.appointments.set(
-        records.map((record) => {
+        response.appointments.map((record) => {
           const scheduledAt = new Date(record.scheduled_at);
-          const service = servicesById.get(record.service_id);
 
           const view: AppointmentView = {
             id: record.id,
+            employeeId: record.employee_id,
+            employeeName: record.employees?.name || 'Sin nombre',
             clientName: record.client_name,
             clientPhone: record.client_phone,
-            serviceName: service?.name ?? 'Servicio',
-            price: service?.price ?? 0,
+            serviceName: record.services?.name ?? 'Servicio',
+            price: record.services?.price ?? 0,
             time: formatTime12h(scheduledAt),
             status: record.status,
             dateKey: toDateKey(scheduledAt)
@@ -179,6 +183,10 @@ export class AppointmentsPageComponent implements OnInit {
   shiftWeek(days: number): void {
     const current = this.selectedDate();
     this.selectedDate.set(new Date(current.getFullYear(), current.getMonth(), current.getDate() + days));
+  }
+
+  setAgendaFilter(employeeId: string): void {
+    this.agendaFilter.set(employeeId);
   }
 
   openAgendarModal(): void {

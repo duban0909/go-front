@@ -1,10 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AppointmentStatus } from '../../../core/models/appointment.model';
-import { ServiceItem } from '../../../core/models/goagenda.models';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { SessionService } from '../../../core/services/session.service';
-import { SupabaseAppointmentsService } from '../../../core/services/supabase-appointments.service';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
 import {
@@ -44,7 +42,6 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
 export class MyAppointmentsPageComponent implements OnInit {
   private readonly apiService = inject(GoagendaApiService);
   private readonly sessionService = inject(SessionService);
-  private readonly appointmentsService = inject(SupabaseAppointmentsService);
 
   readonly today = new Date();
   readonly selectedDate = signal(new Date());
@@ -77,24 +74,20 @@ export class MyAppointmentsPageComponent implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const [records, services] = await Promise.all([
-        this.appointmentsService.listByEmployee(employeeId),
-        firstValueFrom(this.apiService.listServices(businessId))
-      ]);
-
-      const servicesById = new Map<string, ServiceItem>(services.map((service) => [service.id, service]));
+      const response = await firstValueFrom(
+        this.apiService.listAppointments({ business_id: businessId, employee_id: employeeId, limit: 200 })
+      );
 
       this.appointments.set(
-        records.map((record) => {
+        response.appointments.map((record) => {
           const scheduledAt = new Date(record.scheduled_at);
-          const service = servicesById.get(record.service_id);
 
           const view: AppointmentView = {
             id: record.id,
             clientName: record.client_name,
             clientPhone: record.client_phone,
-            serviceName: service?.name ?? 'Servicio',
-            price: service?.price ?? 0,
+            serviceName: record.services?.name ?? 'Servicio',
+            price: record.services?.price ?? 0,
             time: formatTime12h(scheduledAt),
             status: record.status,
             dateKey: toDateKey(scheduledAt)

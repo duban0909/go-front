@@ -18,6 +18,41 @@
   font-size: 0.88rem;
 }
 
+.agenda-filter {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 1.1rem 1.1rem 0;
+  margin-bottom: 0.9rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.agenda-chip {
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--go-dark) 18%, white);
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+  background: #fff;
+  color: color-mix(in srgb, var(--go-dark) 65%, white);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.agenda-chip.active {
+  border-color: var(--go-teal);
+  background: var(--go-teal);
+  color: #fff;
+}
+
+.appointment-employee {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: color-mix(in srgb, var(--go-dark) 55%, white);
+  font-size: 0.82rem;
+}
+
 .calendar-card {
   background: #fff;
   border-radius: 0 0 var(--go-radius-lg) var(--go-radius-lg);

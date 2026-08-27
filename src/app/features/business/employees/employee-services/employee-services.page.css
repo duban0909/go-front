@@ -55,6 +55,7 @@
 .service-checklist {
   display: grid;
   gap: 0.6rem;
+  margin-top: 0.5rem;
 }
 
 .service-row {

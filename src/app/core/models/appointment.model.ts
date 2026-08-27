@@ -1,6 +1,5 @@
 export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
-/** Fila de la tabla `appointments` de Supabase, consultada directamente (no pasa por el backend de GoAgenda). */
 export interface AppointmentRecord {
   id: string;
   business_id: string;
@@ -12,4 +11,27 @@ export interface AppointmentRecord {
   status: AppointmentStatus;
   created_at: string;
   reminder_sent: boolean;
+}
+
+/** Fila de GET /appointments: la cita cruda mas el servicio y el empleado resueltos via join. */
+export interface AppointmentApiRecord extends AppointmentRecord {
+  services: { name: string; price: number; duration_minutes: number } | null;
+  employees: { name: string | null } | null;
+}
+
+export interface AppointmentsListResponse {
+  appointments: AppointmentApiRecord[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface ListAppointmentsParams {
+  business_id: string;
+  employee_id?: string;
+  status?: AppointmentStatus;
+  date_from?: string;
+  date_to?: string;
+  limit?: number;
+  offset?: number;
 }

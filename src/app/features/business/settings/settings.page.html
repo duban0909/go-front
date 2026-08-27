@@ -13,29 +13,85 @@
       <span class="card-icon">
         <app-lucide-icon name="message-circle" [size]="20" [strokeWidth]="1.9" />
       </span>
-      Enlace de chat
+      Enlaces de chat
       <span class="chat-status" [class.chat-status-off]="!chatEnabled()">
         {{ chatEnabled() ? 'Activo' : 'Inactivo' }}
       </span>
     </h2>
 
-    <p class="hint-text">
-      Comparte este enlace con tus clientes para que agenden citas hablando con tu asistente virtual.
-    </p>
-
     @if (!chatEnabled()) {
       <p class="chat-hint-warning">
-        El agendamiento automatico aun no esta activo para tu plan. El enlace funciona, pero el asistente no podra
+        El agendamiento automatico aun no esta activo para tu plan. Los enlaces funcionan, pero el asistente no podra
         agendar citas hasta activarlo.
       </p>
     }
 
+    <p class="hint-text">
+      Hay dos tipos de enlace, usa el que corresponda segun el caso:
+    </p>
+    <ul class="link-explainer">
+      <li>
+        <strong>Enlace general</strong> — el cliente elige con cual profesional quiere la cita al empezar a
+        conversar. Usalo en tu sitio web, redes sociales, o cualquier lugar publico del negocio.
+      </li>
+      <li>
+        <strong>Enlace personal</strong> (tuyo o de cada empleado, en la seccion Empleados) — ya viene fijo a esa
+        persona, el asistente se presenta con su nombre y no pregunta con quien. Usalo en la tarjeta de presentacion
+        o redes personales de cada profesional.
+      </li>
+    </ul>
+
+    <h3 class="link-subheading">Enlace general</h3>
+    <p class="hint-text">Comparte este con tus clientes para que agenden hablando con tu asistente virtual.</p>
     <app-chat-link-qr-card
       [chatLink]="chatLink()"
       [businessName]="form.controls.name.value"
       [whatsapp]="form.controls.phone_number.value"
     />
+
+    <h3 class="link-subheading">Tu enlace personal</h3>
+    <p class="hint-text">Este es tuyo como empleado principal — siempre agenda contigo directamente.</p>
+    <app-chat-link-qr-card
+      [chatLink]="ownChatLink()"
+      [businessName]="form.controls.name.value"
+      [whatsapp]="form.controls.phone_number.value"
+    />
   </article>
+
+  <article class="card">
+    <h2>
+      <span class="card-icon">
+        <app-lucide-icon name="user" [size]="20" [strokeWidth]="1.9" />
+      </span>
+      Tu nombre
+    </h2>
+    <p class="hint-text">
+      Este es tu nombre como empleado principal — aparece cuando un cliente elige con quien agendar por chat.
+    </p>
+
+    <form [formGroup]="ownerNameForm" (ngSubmit)="saveOwnerName()" class="settings-form">
+      <app-text-field label="Tu nombre" icon="user" [showLabel]="true" formControlName="name" />
+
+      @if (ownerNameSuccess()) {
+        <p class="success-text">{{ ownerNameSuccess() }}</p>
+      }
+
+      <app-button type="submit" [loading]="isSavingOwnerName()">
+        {{ isSavingOwnerName() ? 'Guardando...' : 'Guardar nombre' }}
+      </app-button>
+    </form>
+  </article>
+
+  <a routerLink="/business/employees" class="link-card">
+    <span class="card-icon">
+      <app-lucide-icon name="user" [size]="20" [strokeWidth]="1.9" />
+    </span>
+    <div class="link-card-copy">
+      <h2>Empleados</h2>
+      <p>Invita empleados y administra sus horarios y servicios</p>
+    </div>
+    <app-lucide-icon name="chevron-right" [size]="20" [strokeWidth]="2" />
+  </a>
 
   <article class="card">
     <h2>

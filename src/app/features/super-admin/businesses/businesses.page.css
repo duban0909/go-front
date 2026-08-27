@@ -14,26 +14,17 @@
 }
 
 .brand-wrap {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  background: #fff;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.6rem;
 }
 
-.brand-mark {
-  color: var(--go-teal);
-}
-
-.brand-name {
-  margin: 0;
-  color: #fff;
-  font-family: Sora, Manrope, sans-serif;
-  font-weight: 600;
-  font-size: 1.15rem;
-  letter-spacing: -0.01em;
-}
-
-.brand-name strong {
-  font-weight: 800;
+.brand-logo {
+  display: block;
+  height: 1.5rem;
+  width: auto;
 }
 
 .logout-btn {

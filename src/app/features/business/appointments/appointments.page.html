@@ -3,6 +3,24 @@
     <p class="error-banner" role="alert">{{ error() }}</p>
   }
 
+  @if (employees().length > 1) {
+    <div class="agenda-filter">
+      <button type="button" class="agenda-chip" [class.active]="!agendaFilter()" (click)="setAgendaFilter('')">
+        Todos
+      </button>
+      @for (employee of employees(); track employee.id) {
+        <button
+          type="button"
+          class="agenda-chip"
+          [class.active]="agendaFilter() === employee.id"
+          (click)="setAgendaFilter(employee.id)"
+        >
+          {{ employee.name || 'Sin nombre' }}
+        </button>
+      }
+    </div>
+  }
+
   <article class="calendar-card">
     <div class="calendar-nav">
       <button type="button" class="nav-btn" (click)="shiftWeek(-7)" aria-label="Semana anterior">
@@ -71,6 +89,13 @@
                   {{ statusLabel(appointment.status) }}
                 </span>
               </div>
+
+              @if (!agendaFilter() && employees().length > 1) {
+                <span class="appointment-employee">
+                  <app-lucide-icon name="user" [size]="15" [strokeWidth]="2" />
+                  {{ appointment.employeeName }}
+                </span>
+              }
 
               <div class="appointment-bottom">
                 <span class="appointment-time">

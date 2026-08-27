@@ -1,6 +1,6 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { SessionService } from '../../../core/services/session.service';
@@ -12,7 +12,7 @@ import { UiTextFieldComponent } from '../../../shared/components/ui-text-field/u
 
 @Component({
   selector: 'app-settings-page',
-  imports: [ReactiveFormsModule, LucideIconComponent, UiButtonComponent, UiTextFieldComponent, ChatLinkQrCardComponent],
+  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent, UiButtonComponent, UiTextFieldComponent, ChatLinkQrCardComponent],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.css'
 })
@@ -24,12 +24,21 @@ export class SettingsPageComponent implements OnInit {
   readonly successMessage = signal('');
 
   readonly chatEnabled = signal(false);
+  readonly isSavingOwnerName = signal(false);
+  readonly ownerNameSuccess = signal('');
 
   readonly form;
+  readonly ownerNameForm;
 
   readonly chatLink = computed(() => {
     const businessId = this.sessionService.businessId();
     return businessId ? `${window.location.origin}/chat/${businessId}` : '';
+  });
+
+  readonly ownChatLink = computed(() => {
+    const businessId = this.sessionService.businessId();
+    const employeeId = this.sessionService.employeeId();
+    return businessId && employeeId ? `${window.location.origin}/chat/${businessId}/${employeeId}` : '';
   });
 
   constructor(
@@ -43,11 +52,39 @@ export class SettingsPageComponent implements OnInit {
       name: ['', [Validators.required]],
       phone_number: ['']
     });
+    this.ownerNameForm = this.formBuilder.nonNullable.group({
+      name: ['', [Validators.required]]
+    });
   }
 
   ngOnInit(): void {
     void this.loadSettings();
     void this.loadChatConfig();
+    this.ownerNameForm.reset({ name: this.sessionService.currentEmployment()?.name ?? '' });
+  }
+
+  async saveOwnerName(): Promise<void> {
+    const employeeId = this.sessionService.employeeId();
+
+    if (this.ownerNameForm.invalid || !employeeId || this.isSavingOwnerName()) {
+      this.ownerNameForm.markAllAsTouched();
+      return;
+    }
+
+    this.isSavingOwnerName.set(true);
+    this.ownerNameSuccess.set('');
+    this.error.set('');
+
+    try {
+      const { name } = this.ownerNameForm.getRawValue();
+      await firstValueFrom(this.apiService.updateEmployee(employeeId, { name }));
+      await this.sessionService.refresh();
+      this.ownerNameSuccess.set('Nombre actualizado.');
+    } catch {
+      this.error.set('No se pudo actualizar tu nombre.');
+    } finally {
+      this.isSavingOwnerName.set(false);
+    }
   }
 
   async loadChatConfig(): Promise<void> {

@@ -1,8 +1,7 @@
 <div class="shell-layout">
   <header class="topbar">
     <div class="brand-wrap">
-      <app-lucide-icon name="calendar-check" [size]="22" [strokeWidth]="2.2" class="brand-mark" />
-      <p class="brand-name">Go <strong>Agenda</strong></p>
+      <img src="/Logo.png" alt="GoAgenda" class="brand-logo" />
     </div>
   </header>
 
@@ -34,7 +33,7 @@
       <app-lucide-icon name="clock" [size]="22" [strokeWidth]="2" />
       <span>Horario</span>
     </a>
-    <a routerLink="./employees" routerLinkActive="active" [class.disabled]="isBlocked()">
+    <a routerLink="./employees" routerLinkActive="active" [class.disabled]="isBlocked()" class="desktop-only">
       <app-lucide-icon name="user" [size]="22" [strokeWidth]="2" />
       <span>Empleados</span>
     </a>

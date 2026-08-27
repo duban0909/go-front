@@ -44,6 +44,7 @@
 .employee-list {
   display: grid;
   gap: 0.8rem;
+  margin-top: 0.5rem;
 }
 
 .employee-card {
