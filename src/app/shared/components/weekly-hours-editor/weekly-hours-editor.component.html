@@ -1,0 +1,58 @@
+@if (isLoading) {
+  <p class="hint-text">Cargando horario...</p>
+} @else {
+  <div class="day-list">
+    @for (day of days; track day.key) {
+      <article class="day-card">
+        <div class="day-row">
+          <div class="day-info">
+            <span class="day-icon" [class.active]="day.isOpen">
+              <app-lucide-icon [name]="day.isOpen ? 'calendar-check' : 'calendar-x'" [size]="20" [strokeWidth]="1.9" />
+            </span>
+            <span class="day-name">{{ day.label }}</span>
+          </div>
+
+          <button
+            type="button"
+            class="toggle-switch"
+            [class.on]="day.isOpen"
+            role="switch"
+            [attr.aria-checked]="day.isOpen"
+            [attr.aria-label]="day.label"
+            (click)="toggleDay(day)"
+          >
+            <span class="toggle-thumb"></span>
+          </button>
+        </div>
+
+        @if (day.isOpen) {
+          <div class="day-detail">
+            <div class="detail-row">
+              <span class="detail-label">
+                <app-lucide-icon name="clock" [size]="16" [strokeWidth]="1.9" />
+                Atencion
+              </span>
+              <span class="time-range">
+                <input type="time" [(ngModel)]="day.openingTime" (change)="onTimeChange(day)" />
+                <span>-</span>
+                <input type="time" [(ngModel)]="day.closingTime" (change)="onTimeChange(day)" />
+              </span>
+            </div>
+
+            <div class="detail-row">
+              <span class="detail-label">
+                <app-lucide-icon name="utensils" [size]="16" [strokeWidth]="1.9" />
+                Almuerzo
+              </span>
+              <span class="time-range">
+                <input type="time" [(ngModel)]="day.lunchStart" (change)="onTimeChange(day)" />
+                <span>-</span>
+                <input type="time" [(ngModel)]="day.lunchEnd" (change)="onTimeChange(day)" />
+              </span>
+            </div>
+          </div>
+        }
+      </article>
+    }
+  </div>
+}
