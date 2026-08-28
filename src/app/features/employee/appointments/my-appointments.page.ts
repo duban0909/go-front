@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { AppointmentStatus } from '../../../core/models/appointment.model';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
+import { RealtimeService } from '../../../core/services/realtime.service';
 import { SessionService } from '../../../core/services/session.service';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
@@ -42,6 +43,7 @@ const STATUS_LABELS: Record<AppointmentStatus, string> = {
 export class MyAppointmentsPageComponent implements OnInit {
   private readonly apiService = inject(GoagendaApiService);
   private readonly sessionService = inject(SessionService);
+  private readonly realtimeService = inject(RealtimeService);
 
   readonly today = new Date();
   readonly selectedDate = signal(new Date());
@@ -57,6 +59,17 @@ export class MyAppointmentsPageComponent implements OnInit {
     const dateKey = toDateKey(this.selectedDate());
     return this.appointments().filter((appointment) => appointment.dateKey === dateKey);
   });
+
+  constructor() {
+    // Recarga la agenda cuando llega un evento de cita del empleado activo por WebSocket.
+    effect(() => {
+      const event = this.realtimeService.lastEvent();
+
+      if (event && event.business_id === this.sessionService.businessId() && event.appointment.employee_id === this.sessionService.employeeId()) {
+        void this.loadAppointments();
+      }
+    });
+  }
 
   ngOnInit(): void {
     void this.loadAppointments();

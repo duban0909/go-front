@@ -1,0 +1,41 @@
+<div class="notif-bell">
+  <button type="button" class="bell-trigger" (click)="toggle()" [attr.aria-expanded]="isOpen()" aria-label="Notificaciones">
+    <app-lucide-icon name="bell" [size]="21" [strokeWidth]="2" />
+    @if (unreadCount() > 0) {
+      <span class="badge">{{ badgeLabel() }}</span>
+    }
+  </button>
+
+  @if (isOpen()) {
+    <div class="notif-panel">
+      <div class="notif-panel-header">
+        <span>Notificaciones</span>
+        @if (unreadCount() > 0) {
+          <button type="button" class="mark-all" (click)="markAllAsRead()">Marcar todas leidas</button>
+        }
+      </div>
+
+      <div class="notif-list">
+        @for (notification of notifications(); track notification.id) {
+          <button
+            type="button"
+            class="notif-item"
+            [class.unread]="!notification.read"
+            (click)="selectNotification(notification)"
+          >
+            <app-lucide-icon [name]="iconFor(notification.type)" [size]="18" [strokeWidth]="2" class="notif-item-icon" />
+            <span class="notif-item-body">
+              <span class="notif-title">{{ titleFor(notification.type) }}</span>
+              <span class="notif-detail">
+                {{ notification.appointment.client_name }} · {{ notification.appointment.services?.name ?? 'Servicio' }}
+              </span>
+              <span class="notif-time">{{ relativeTime(notification.receivedAt) }}</span>
+            </span>
+          </button>
+        } @empty {
+          <p class="notif-empty">No hay notificaciones todavia.</p>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -59,3 +59,24 @@ export function formatFullDate(date: Date): string {
   const month = MONTH_LONG[date.getMonth()];
   return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} ${date.getDate()} de ${month} ${date.getFullYear()}`;
 }
+
+export function formatRelativeTime(date: Date): string {
+  const diffSec = Math.max(0, Math.round((Date.now() - date.getTime()) / 1000));
+
+  if (diffSec < 60) {
+    return 'Justo ahora';
+  }
+
+  const diffMin = Math.round(diffSec / 60);
+  if (diffMin < 60) {
+    return `Hace ${diffMin} min`;
+  }
+
+  const diffHour = Math.round(diffMin / 60);
+  if (diffHour < 24) {
+    return `Hace ${diffHour} h`;
+  }
+
+  const diffDay = Math.round(diffHour / 24);
+  return `Hace ${diffDay} d`;
+}

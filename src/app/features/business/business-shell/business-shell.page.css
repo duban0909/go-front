@@ -33,6 +33,10 @@
   width: auto;
 }
 
+.topbar-spacer {
+  flex: 1;
+}
+
 .content-panel {
   max-width: 72rem;
   margin-inline: auto;

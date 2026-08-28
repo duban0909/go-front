@@ -1,7 +1,8 @@
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
+import { RealtimeService } from '../../../core/services/realtime.service';
 import { SessionService } from '../../../core/services/session.service';
 import { AppointmentStatus } from '../../../core/models/appointment.model';
 import { Employee, ServiceItem } from '../../../core/models/goagenda.models';
@@ -70,6 +71,8 @@ export class AppointmentsPageComponent implements OnInit {
     );
   });
 
+  private readonly realtimeService = inject(RealtimeService);
+
   readonly form;
 
   constructor(
@@ -83,6 +86,15 @@ export class AppointmentsPageComponent implements OnInit {
       service_id: ['', [Validators.required]],
       employee_id: ['', [Validators.required]],
       time: ['10:00', [Validators.required]]
+    });
+
+    // Recarga el calendario cuando llega un evento de cita del negocio activo por WebSocket.
+    effect(() => {
+      const event = this.realtimeService.lastEvent();
+
+      if (event && event.business_id === this.sessionService.businessId()) {
+        void this.loadAppointments();
+      }
     });
   }
 
