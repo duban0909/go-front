@@ -1,6 +1,7 @@
 import { AfterViewChecked, Component, ElementRef, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { ChatOption } from '../../core/models/goagenda.models';
 import { GoagendaApiService } from '../../core/services/goagenda-api.service';
 import { LucideIconComponent } from '../../shared/components/lucide-icon/lucide-icon.component';
 
@@ -11,6 +12,7 @@ const TEXTAREA_MAX_HEIGHT = 120;
 interface ChatBubble {
   role: 'user' | 'assistant';
   content: string;
+  options?: ChatOption[] | null;
 }
 
 @Component({
@@ -36,6 +38,13 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   readonly businessInitial = computed(() => (this.businessName().trim().charAt(0) || 'G').toUpperCase());
   readonly canSend = computed(() => this.enabled() && !this.isSending() && this.draft().trim().length > 0);
+
+  // Solo se ofrecen botones de seleccion rapida en el ultimo mensaje del asistente:
+  // una vez el cliente sigue la conversacion, opciones de un turno anterior ya no aplican.
+  readonly latestOptions = computed(() => {
+    const last = this.messages().at(-1);
+    return last?.role === 'assistant' && !this.isSending() ? (last.options ?? null) : null;
+  });
 
   private businessId = '';
   private employeeId = '';
@@ -108,10 +117,13 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     this.queueScroll();
 
     try {
-      const respuesta = await firstValueFrom(
+      const response = await firstValueFrom(
         this.apiService.sendChatMessage(this.businessId, this.sessionId, text, this.employeeId || undefined)
       );
-      this.messages.update((current) => [...current, { role: 'assistant', content: respuesta }]);
+      this.messages.update((current) => [
+        ...current,
+        { role: 'assistant', content: response.respuesta, options: response.opciones }
+      ]);
       this.playNotificationSound();
     } catch {
       this.errorMessage.set('No se pudo enviar el mensaje. Intenta de nuevo.');
@@ -119,6 +131,16 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
       this.isSending.set(false);
       this.queueScroll();
     }
+  }
+
+  /** Boton de seleccion rapida: manda el valor directamente, como si el cliente lo hubiera escrito. */
+  selectOption(value: string): void {
+    if (this.isSending()) {
+      return;
+    }
+
+    this.draft.set(value);
+    void this.sendMessage();
   }
 
   private async bootstrap(): Promise<void> {

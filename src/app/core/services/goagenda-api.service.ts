@@ -278,12 +278,10 @@ export class GoagendaApiService {
       .pipe(map((response) => response.session_id));
   }
 
-  sendChatMessage(businessId: string, sessionId: string, mensaje: string, employeeId?: string): Observable<string> {
-    return this.http
-      .post<ChatMessageResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`, {
-        mensaje
-      })
-      .pipe(map((response) => response.respuesta));
+  sendChatMessage(businessId: string, sessionId: string, mensaje: string, employeeId?: string): Observable<ChatMessageResponse> {
+    return this.http.post<ChatMessageResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`, {
+      mensaje
+    });
   }
 
   getChatHistory(businessId: string, sessionId: string, employeeId?: string): Observable<ChatHistoryMessage[]> {

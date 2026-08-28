@@ -225,6 +225,32 @@
   animation-delay: 300ms;
 }
 
+.quick-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-left: 2.4rem;
+  animation: bubble-in 220ms ease-out;
+}
+
+.quick-option {
+  border: 1.5px solid var(--go-teal);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  background: #fff;
+  color: var(--go-teal);
+  font-size: 0.88rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background 130ms ease, color 130ms ease;
+}
+
+.quick-option:active {
+  background: var(--go-teal);
+  color: #fff;
+}
+
 .chat-error {
   margin: 0.5rem 1rem 0;
   border-radius: 0.9rem;

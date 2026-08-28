@@ -8,11 +8,20 @@ import { SupabaseAuthService } from '../../../core/services/supabase-auth.servic
 import { ChatLinkQrCardComponent } from '../../../shared/components/chat-link-qr-card/chat-link-qr-card.component';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
+import { UiModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
 import { UiTextFieldComponent } from '../../../shared/components/ui-text-field/ui-text-field.component';
 
 @Component({
   selector: 'app-settings-page',
-  imports: [ReactiveFormsModule, RouterLink, LucideIconComponent, UiButtonComponent, UiTextFieldComponent, ChatLinkQrCardComponent],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    LucideIconComponent,
+    UiButtonComponent,
+    UiTextFieldComponent,
+    UiModalComponent,
+    ChatLinkQrCardComponent
+  ],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.css'
 })
@@ -26,6 +35,7 @@ export class SettingsPageComponent implements OnInit {
   readonly chatEnabled = signal(false);
   readonly isSavingOwnerName = signal(false);
   readonly ownerNameSuccess = signal('');
+  readonly isLinksInfoModalOpen = signal(false);
 
   readonly form;
   readonly ownerNameForm;

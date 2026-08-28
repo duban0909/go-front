@@ -26,22 +26,12 @@
       </p>
     }
 
-    <p class="hint-text">
-      Hay dos tipos de enlace, usa el que corresponda segun el caso:
-    </p>
-    <ul class="link-explainer">
-      <li>
-        <strong>Enlace general</strong> — el cliente elige con cual profesional quiere la cita al empezar a
-        conversar. Usalo en tu sitio web, redes sociales, o cualquier lugar publico del negocio.
-      </li>
-      <li>
-        <strong>Enlace personal</strong> (tuyo o de cada empleado, en la seccion Empleados) — ya viene fijo a esa
-        persona, el asistente se presenta con su nombre y no pregunta con quien. Usalo en la tarjeta de presentacion
-        o redes personales de cada profesional.
-      </li>
-    </ul>
-
-    <h3 class="link-subheading">Enlace general</h3>
+    <h3 class="link-subheading">
+      Enlace general
+      <button type="button" class="info-btn" (click)="isLinksInfoModalOpen.set(true)" aria-label="Que es el enlace general">
+        <app-lucide-icon name="info" [size]="16" [strokeWidth]="2" />
+      </button>
+    </h3>
     <p class="hint-text">Comparte este con tus clientes para que agenden hablando con tu asistente virtual.</p>
     <app-chat-link-qr-card
       [chatLink]="chatLink()"
@@ -49,7 +39,12 @@
       [whatsapp]="form.controls.phone_number.value"
     />
 
-    <h3 class="link-subheading">Tu enlace personal</h3>
+    <h3 class="link-subheading">
+      Tu enlace personal
+      <button type="button" class="info-btn" (click)="isLinksInfoModalOpen.set(true)" aria-label="Que es el enlace personal">
+        <app-lucide-icon name="info" [size]="16" [strokeWidth]="2" />
+      </button>
+    </h3>
     <p class="hint-text">Este es tuyo como empleado principal — siempre agenda contigo directamente.</p>
     <app-chat-link-qr-card
       [chatLink]="ownChatLink()"
@@ -126,3 +121,19 @@
 
   <p class="version-tag">GoAgenda &middot; v0.1 (MVP)</p>
 </section>
+
+@if (isLinksInfoModalOpen()) {
+  <app-modal title="Tipos de enlace de chat" (close)="isLinksInfoModalOpen.set(false)">
+    <ul class="link-explainer">
+      <li>
+        <strong>Enlace general</strong> — el cliente elige con cual profesional quiere la cita al empezar a
+        conversar. Usalo en tu sitio web, redes sociales, o cualquier lugar publico del negocio.
+      </li>
+      <li>
+        <strong>Enlace personal</strong> (tuyo o de cada empleado, en la seccion Empleados) — ya viene fijo a esa
+        persona, el asistente se presenta con su nombre y no pregunta con quien. Usalo en la tarjeta de presentacion
+        o redes personales de cada profesional.
+      </li>
+    </ul>
+  </app-modal>
+}

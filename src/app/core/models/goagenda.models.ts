@@ -133,8 +133,15 @@ export interface ChatMessageInput {
   mensaje: string;
 }
 
+/** Opcion de seleccion rapida (boton) que el cliente puede tocar en vez de escribir. */
+export interface ChatOption {
+  label: string;
+  value: string;
+}
+
 export interface ChatMessageResponse {
   respuesta: string;
+  opciones: ChatOption[] | null;
 }
 
 export interface ChatHistoryMessage {

@@ -3,24 +3,6 @@
     <p class="error-banner" role="alert">{{ error() }}</p>
   }
 
-  @if (employees().length > 1) {
-    <div class="agenda-filter">
-      <button type="button" class="agenda-chip" [class.active]="!agendaFilter()" (click)="setAgendaFilter('')">
-        Todos
-      </button>
-      @for (employee of employees(); track employee.id) {
-        <button
-          type="button"
-          class="agenda-chip"
-          [class.active]="agendaFilter() === employee.id"
-          (click)="setAgendaFilter(employee.id)"
-        >
-          {{ employee.name || 'Sin nombre' }}
-        </button>
-      }
-    </div>
-  }
-
   <article class="calendar-card">
     <div class="calendar-nav">
       <button type="button" class="nav-btn" (click)="shiftWeek(-7)" aria-label="Semana anterior">
@@ -44,6 +26,24 @@
       }
     </div>
   </article>
+
+  @if (employees().length > 1) {
+    <div class="agenda-filter">
+      <button type="button" class="agenda-chip" [class.active]="!agendaFilter()" (click)="setAgendaFilter('')">
+        Todos
+      </button>
+      @for (employee of employees(); track employee.id) {
+        <button
+          type="button"
+          class="agenda-chip"
+          [class.active]="agendaFilter() === employee.id"
+          (click)="setAgendaFilter(employee.id)"
+        >
+          {{ employee.name || 'Sin nombre' }}
+        </button>
+      }
+    </div>
+  }
 
   <div class="selected-date-bar">
     <span class="selected-date-icon">

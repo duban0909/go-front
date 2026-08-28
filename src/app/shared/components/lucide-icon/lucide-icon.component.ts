@@ -35,6 +35,7 @@ export type LucideIconName =
   | 'volume-x'
   | 'qr-code'
   | 'download'
+  | 'info'
   | 'x';
 
 type IconElement =
@@ -292,6 +293,10 @@ const LUCIDE_ICONS: Record<LucideIconName, LucideIconData> = {
   download: {
     viewBox: '0 0 24 24',
     elements: [path('M12 15V3'), path('M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4'), path('m7 10 5 5 5-5')]
+  },
+  info: {
+    viewBox: '0 0 24 24',
+    elements: [circle(12, 12, 10), path('M12 16v-4'), path('M12 8h.01')]
   },
   x: { viewBox: '0 0 24 24', elements: [path('M18 6 6 18'), path('m6 6 12 12')] }
 };
