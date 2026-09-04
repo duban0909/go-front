@@ -61,11 +61,16 @@ export class MyAppointmentsPageComponent implements OnInit {
   });
 
   constructor() {
-    // Recarga la agenda cuando llega un evento de cita del empleado activo por WebSocket.
+    // Recarga la agenda cuando llega un evento de cita (no de chat) del empleado activo por WebSocket.
     effect(() => {
       const event = this.realtimeService.lastEvent();
 
-      if (event && event.business_id === this.sessionService.businessId() && event.appointment.employee_id === this.sessionService.employeeId()) {
+      if (
+        event &&
+        event.type !== 'chat.escalated' &&
+        event.business_id === this.sessionService.businessId() &&
+        event.appointment.employee_id === this.sessionService.employeeId()
+      ) {
         void this.loadAppointments();
       }
     });

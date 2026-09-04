@@ -1,4 +1,4 @@
-import { AfterViewChecked, Component, ElementRef, OnInit, ViewChild, computed, signal } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ChatOption } from '../../core/models/goagenda.models';
@@ -8,6 +8,7 @@ import { LucideIconComponent } from '../../shared/components/lucide-icon/lucide-
 const SESSION_KEY_PREFIX = 'goagenda_chat_session_';
 const SOUND_PREF_KEY = 'goagenda_chat_sound_enabled';
 const TEXTAREA_MAX_HEIGHT = 120;
+const POLL_INTERVAL_MS = 5000;
 
 interface ChatBubble {
   role: 'user' | 'assistant';
@@ -21,7 +22,7 @@ interface ChatBubble {
   templateUrl: './chat.page.html',
   styleUrl: './chat.page.css'
 })
-export class ChatPageComponent implements OnInit, AfterViewChecked {
+export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
   @ViewChild('scrollAnchor') private readonly scrollAnchor?: ElementRef<HTMLDivElement>;
   @ViewChild('composerInput') private readonly composerInput?: ElementRef<HTMLTextAreaElement>;
 
@@ -51,6 +52,18 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
   private sessionId = '';
   private shouldScroll = false;
   private audioContext?: AudioContext;
+  private pollTimer?: ReturnType<typeof setInterval>;
+  private readonly handleVisibilityChange = (): void => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    if (document.visibilityState === 'visible') {
+      this.resumePolling();
+    } else {
+      this.pausePolling();
+    }
+  };
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -68,12 +81,27 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
     }
 
     void this.bootstrap();
+
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+      if (document.visibilityState === 'visible') {
+        this.resumePolling();
+      }
+    }
   }
 
   ngAfterViewChecked(): void {
     if (this.shouldScroll) {
       this.shouldScroll = false;
       this.scrollAnchor?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.pausePolling();
+
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     }
   }
 
@@ -99,7 +127,11 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   formatMessage(content: string): string {
     const escaped = content.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return escaped.replace(/\*([^\n*]+)\*/g, '<strong>$1</strong>');
+    const linked = escaped.replace(
+      /(https?:\/\/[^\s<]+)/g,
+      '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+    );
+    return linked.replace(/\*([^\n*]+)\*/g, '<strong>$1</strong>');
   }
 
   async sendMessage(): Promise<void> {
@@ -205,6 +237,53 @@ export class ChatPageComponent implements OnInit, AfterViewChecked {
 
   private normalizeRole(role: string): 'user' | 'assistant' {
     return role === 'user' || role === 'human' ? 'user' : 'assistant';
+  }
+
+  /**
+   * Consulta cada POLL_INTERVAL_MS si hay mensajes nuevos que el cliente
+   * todavia no ve — asi, si el dueño responde manualmente desde el panel
+   * (agent/graph.py:enviar_respuesta_humana) mientras esta pestaña sigue
+   * abierta, el mensaje llega en unos segundos sin que el cliente tenga
+   * que escribir de nuevo. El widget no tiene ningun canal en vivo, asi
+   * que esto es deliberadamente un polling simple, no un WebSocket.
+   */
+  private resumePolling(): void {
+    if (this.pollTimer) {
+      return;
+    }
+
+    this.pollTimer = setInterval(() => void this.pollForNewMessages(), POLL_INTERVAL_MS);
+  }
+
+  private pausePolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = undefined;
+    }
+  }
+
+  private async pollForNewMessages(): Promise<void> {
+    if (!this.sessionId || this.isSending()) {
+      return;
+    }
+
+    try {
+      const history = await firstValueFrom(
+        this.apiService.getChatHistory(this.businessId, this.sessionId, this.employeeId || undefined)
+      );
+
+      if (history.length > this.messages().length) {
+        const nuevos = history
+          .slice(this.messages().length)
+          .map((message) => ({ role: this.normalizeRole(message.role), content: message.content }));
+
+        this.messages.update((current) => [...current, ...nuevos]);
+        this.playNotificationSound();
+        this.queueScroll();
+      }
+    } catch {
+      // Un fallo de polling no debe interrumpir el chat; se reintenta en el siguiente ciclo.
+    }
   }
 
   private resetComposerHeight(): void {

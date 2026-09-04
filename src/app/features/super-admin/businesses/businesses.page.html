@@ -65,8 +65,8 @@
 @if (isCreateModalOpen()) {
   <app-modal title="Nuevo negocio" (close)="closeCreateModal()">
     <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="modal-form">
-      <app-text-field label="Nombre del negocio" placeholder="Ej. Barberia Central" formControlName="name" />
-      <app-text-field label="Tipo de negocio (opcional)" placeholder="Ej. Barberia" formControlName="business_type" />
+      <app-text-field label="Nombre del negocio" placeholder="Ej. Barberia Central" [showLabel]="true" formControlName="name" />
+      <app-text-field label="Tipo de negocio (opcional)" placeholder="Ej. Barberia" [showLabel]="true" formControlName="business_type" />
 
       <app-button type="submit" [loading]="isSaving()">
         {{ isSaving() ? 'Creando...' : 'Crear negocio' }}

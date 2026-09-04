@@ -1,6 +1,6 @@
 import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { GOAGENDA_API_URL } from '../config/goagenda-api.config';
-import { AppointmentNotification, RealtimeAppointmentMessage, RealtimeEventType } from '../models/realtime.model';
+import { RealtimeEventType, RealtimeMessage, RealtimeNotification } from '../models/realtime.model';
 import { SessionService } from './session.service';
 
 const WS_URL = GOAGENDA_API_URL.replace(/^http/, 'ws');
@@ -11,7 +11,8 @@ const RECONNECT_MAX_DELAY_MS = 30000;
 const EVENT_TITLES: Record<RealtimeEventType, string> = {
   'appointment.created': 'Nueva cita agendada',
   'appointment.updated': 'Cita actualizada',
-  'appointment.cancelled': 'Cita cancelada'
+  'appointment.cancelled': 'Cita cancelada',
+  'chat.escalated': 'Un cliente necesita ayuda'
 };
 
 /**
@@ -31,10 +32,10 @@ export class RealtimeService {
   private audioContext: AudioContext | null = null;
   private permissionRequested = false;
 
-  readonly notifications = signal<AppointmentNotification[]>([]);
+  readonly notifications = signal<RealtimeNotification[]>([]);
   readonly unreadCount = computed(() => this.notifications().filter((n) => !n.read).length);
   readonly connected = signal(false);
-  readonly lastEvent = signal<RealtimeAppointmentMessage | null>(null);
+  readonly lastEvent = signal<RealtimeMessage | null>(null);
 
   constructor() {
     this.unlockAudioOnFirstInteraction();
@@ -142,7 +143,7 @@ export class RealtimeService {
   }
 
   private handleMessage(event: MessageEvent<string>): void {
-    let message: RealtimeAppointmentMessage;
+    let message: RealtimeMessage;
 
     try {
       message = JSON.parse(event.data);
@@ -150,27 +151,47 @@ export class RealtimeService {
       return;
     }
 
-    if (!message?.type || !message.appointment) {
+    if (!message?.type) {
       return;
     }
 
+    let notification: RealtimeNotification;
+
+    if (message.type === 'chat.escalated') {
+      if (!message.session_id) {
+        return;
+      }
+
+      notification = {
+        id: `${message.session_id}-${message.type}-${Date.now()}`,
+        type: message.type,
+        sessionId: message.session_id,
+        clientName: message.client_name,
+        receivedAt: new Date(),
+        read: false
+      };
+    } else {
+      if (!message.appointment) {
+        return;
+      }
+
+      notification = {
+        id: `${message.appointment.id}-${message.type}-${Date.now()}`,
+        type: message.type,
+        appointment: message.appointment,
+        receivedAt: new Date(),
+        read: false
+      };
+    }
+
     this.lastEvent.set(message);
-
-    const notification: AppointmentNotification = {
-      id: `${message.appointment.id}-${message.type}-${Date.now()}`,
-      type: message.type,
-      appointment: message.appointment,
-      receivedAt: new Date(),
-      read: false
-    };
-
     this.notifications.update((list) => [notification, ...list].slice(0, MAX_NOTIFICATIONS));
 
     this.playNotificationSound();
     this.showBrowserNotification(message);
   }
 
-  private showBrowserNotification(message: RealtimeAppointmentMessage): void {
+  private showBrowserNotification(message: RealtimeMessage): void {
     if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
       return;
     }
@@ -181,10 +202,14 @@ export class RealtimeService {
     }
 
     const title = EVENT_TITLES[message.type] ?? 'Notificacion de GoAgenda';
-    const body = `${message.appointment.client_name} · ${message.appointment.services?.name ?? 'Servicio'}`;
+    const body =
+      message.type === 'chat.escalated'
+        ? `${message.client_name ?? 'Un cliente'} esta esperando ayuda en el chat`
+        : `${message.appointment.client_name} · ${message.appointment.services?.name ?? 'Servicio'}`;
+    const tag = message.type === 'chat.escalated' ? message.session_id : message.appointment.id;
 
     try {
-      new Notification(title, { body, tag: message.appointment.id });
+      new Notification(title, { body, tag });
     } catch {
       // Algunos navegadores moviles no soportan el constructor Notification directamente.
     }

@@ -73,6 +73,11 @@
   font-size: 1.15rem;
 }
 
+.nav-btn-group {
+  display: flex;
+  gap: 0.4rem;
+}
+
 .nav-btn {
   width: 2.3rem;
   height: 2.3rem;
@@ -345,6 +350,27 @@
   padding: 0 0.9rem;
   font-size: 0.98rem;
   color: var(--go-charcoal);
+}
+
+.hint-text {
+  margin: 0;
+  color: color-mix(in srgb, var(--go-dark) 55%, white);
+  font-size: 0.85rem;
+}
+
+.availability-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.availability-chip {
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+  font-size: 0.85rem;
+  font-weight: 700;
 }
 
 @media (min-width: 900px) {

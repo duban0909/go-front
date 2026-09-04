@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
@@ -58,6 +59,12 @@ export class AppointmentsPageComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly error = signal('');
   readonly agendaFilter = signal('');
+  readonly availableSlots = signal<string[]>([]);
+  readonly isLoadingSlots = signal(false);
+
+  readonly isAvailabilityModalOpen = signal(false);
+  readonly availabilitySlots = signal<string[]>([]);
+  readonly isLoadingAvailability = signal(false);
 
   readonly weekDays = computed(() => getWeekDays(this.selectedDate()));
   readonly monthLabel = computed(() => formatMonthYear(this.selectedDate()));
@@ -74,6 +81,7 @@ export class AppointmentsPageComponent implements OnInit {
   private readonly realtimeService = inject(RealtimeService);
 
   readonly form;
+  readonly availabilityForm;
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -85,14 +93,24 @@ export class AppointmentsPageComponent implements OnInit {
       client_phone: ['', [Validators.required]],
       service_id: ['', [Validators.required]],
       employee_id: ['', [Validators.required]],
-      time: ['10:00', [Validators.required]]
+      time: ['', [Validators.required]]
     });
 
-    // Recarga el calendario cuando llega un evento de cita del negocio activo por WebSocket.
+    this.availabilityForm = this.formBuilder.nonNullable.group({
+      employee_id: [''],
+      service_id: [''],
+      date: [toDateKey(this.selectedDate())]
+    });
+
+    // Recalcula los turnos libres cada vez que cambia el empleado o el servicio elegido.
+    this.form.controls.employee_id.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => void this.refreshAvailableSlots());
+    this.form.controls.service_id.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => void this.refreshAvailableSlots());
+
+    // Recarga el calendario cuando llega un evento de cita (no de chat) del negocio activo por WebSocket.
     effect(() => {
       const event = this.realtimeService.lastEvent();
 
-      if (event && event.business_id === this.sessionService.businessId()) {
+      if (event && event.type !== 'chat.escalated' && event.business_id === this.sessionService.businessId()) {
         void this.loadAppointments();
       }
     });
@@ -203,12 +221,84 @@ export class AppointmentsPageComponent implements OnInit {
 
   openAgendarModal(): void {
     const defaultEmployeeId = this.sessionService.currentEmployment()?.employee_id ?? '';
-    this.form.reset({ client_name: '', client_phone: '', service_id: '', employee_id: defaultEmployeeId, time: '10:00' });
+    this.form.reset({ client_name: '', client_phone: '', service_id: '', employee_id: defaultEmployeeId, time: '' });
     this.isModalOpen.set(true);
+    void this.refreshAvailableSlots();
   }
 
   closeModal(): void {
     this.isModalOpen.set(false);
+  }
+
+  async refreshAvailableSlots(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+    const { employee_id, service_id } = this.form.getRawValue();
+
+    if (!businessId || !employee_id || !service_id) {
+      this.availableSlots.set([]);
+      return;
+    }
+
+    this.isLoadingSlots.set(true);
+
+    try {
+      const response = await firstValueFrom(
+        this.apiService.getAvailableSlots({
+          business_id: businessId,
+          employee_id,
+          service_id,
+          date: toDateKey(this.selectedDate())
+        })
+      );
+      this.availableSlots.set(response.available_slots);
+
+      const currentTime = this.form.controls.time.value;
+      if (currentTime && !response.available_slots.includes(currentTime)) {
+        this.form.controls.time.setValue('');
+      }
+    } catch {
+      this.availableSlots.set([]);
+    } finally {
+      this.isLoadingSlots.set(false);
+    }
+  }
+
+  openAvailabilityModal(): void {
+    const defaultEmployeeId = this.sessionService.currentEmployment()?.employee_id ?? '';
+    this.availabilityForm.reset({ employee_id: defaultEmployeeId, service_id: '', date: toDateKey(this.selectedDate()) });
+    this.availabilitySlots.set([]);
+    this.isAvailabilityModalOpen.set(true);
+  }
+
+  closeAvailabilityModal(): void {
+    this.isAvailabilityModalOpen.set(false);
+  }
+
+  async searchAvailability(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+    const { employee_id, service_id, date } = this.availabilityForm.getRawValue();
+
+    if (!businessId || !employee_id || !date) {
+      return;
+    }
+
+    this.isLoadingAvailability.set(true);
+
+    try {
+      const response = await firstValueFrom(
+        this.apiService.getAvailableSlots({
+          business_id: businessId,
+          employee_id,
+          date,
+          service_id: service_id || undefined
+        })
+      );
+      this.availabilitySlots.set(response.available_slots);
+    } catch {
+      this.availabilitySlots.set([]);
+    } finally {
+      this.isLoadingAvailability.set(false);
+    }
   }
 
   async submit(): Promise<void> {

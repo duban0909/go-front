@@ -36,6 +36,7 @@ export type LucideIconName =
   | 'qr-code'
   | 'download'
   | 'info'
+  | 'search'
   | 'x';
 
 type IconElement =
@@ -297,6 +298,10 @@ const LUCIDE_ICONS: Record<LucideIconName, LucideIconData> = {
   info: {
     viewBox: '0 0 24 24',
     elements: [circle(12, 12, 10), path('M12 16v-4'), path('M12 8h.01')]
+  },
+  search: {
+    viewBox: '0 0 24 24',
+    elements: [circle(11, 11, 8), path('m21 21-4.3-4.3')]
   },
   x: { viewBox: '0 0 24 24', elements: [path('M18 6 6 18'), path('m6 6 12 12')] }
 };

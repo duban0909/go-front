@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { businessInfoGuard, onboardingGuard, ownerGuard, sessionGuard, staffGuard, superAdminGuard } from './core/guards/session.guard';
 import { BusinessShellPageComponent } from './features/business/business-shell/business-shell.page';
 import { AppointmentsPageComponent } from './features/business/appointments/appointments.page';
+import { ChatSessionPageComponent } from './features/business/chat-session/chat-session.page';
 import { EmployeeHoursPageComponent } from './features/business/employees/employee-hours/employee-hours.page';
 import { EmployeeServicesPageComponent } from './features/business/employees/employee-services/employee-services.page';
 import { EmployeesListPageComponent } from './features/business/employees/employees-list/employees-list.page';
@@ -94,6 +95,10 @@ export const routes: Routes = [
 			{
 				path: 'settings',
 				component: SettingsPageComponent
+			},
+			{
+				path: 'chat/:sessionId',
+				component: ChatSessionPageComponent
 			}
 		]
 	},

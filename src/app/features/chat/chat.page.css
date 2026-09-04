@@ -196,6 +196,12 @@
   color: inherit;
 }
 
+.bubble a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
 .bubble-user {
   background: var(--go-teal);
   color: #fff;

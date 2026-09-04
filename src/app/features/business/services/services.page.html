@@ -100,9 +100,9 @@
 @if (isModalOpen()) {
   <app-modal [title]="editingService() ? 'Editar servicio' : 'Nuevo servicio'" (close)="closeModal()">
     <form [formGroup]="form" (ngSubmit)="submit()" class="service-form">
-      <app-text-field label="Nombre del servicio" placeholder="Ej. Corte de Cabello" formControlName="name" />
-      <app-text-field label="Duracion (minutos)" type="number" placeholder="30" formControlName="duration_minutes" />
-      <app-text-field label="Precio" type="number" placeholder="25000" formControlName="price" />
+      <app-text-field label="Nombre del servicio" placeholder="Ej. Corte de Cabello" [showLabel]="true" formControlName="name" />
+      <app-text-field label="Duracion (minutos)" type="number" placeholder="30" [showLabel]="true" formControlName="duration_minutes" />
+      <app-text-field label="Precio" type="number" placeholder="25000" [showLabel]="true" formControlName="price" />
 
       <app-button type="submit" [loading]="isSaving()">
         {{ isSaving() ? 'Guardando...' : 'Guardar servicio' }}

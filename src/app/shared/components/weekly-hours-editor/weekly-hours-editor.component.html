@@ -33,9 +33,9 @@
                 Atencion
               </span>
               <span class="time-range">
-                <input type="time" [(ngModel)]="day.openingTime" (change)="onTimeChange(day)" />
+                <input type="time" [attr.aria-label]="'Hora de apertura, ' + day.label" [(ngModel)]="day.openingTime" (change)="onTimeChange(day)" />
                 <span>-</span>
-                <input type="time" [(ngModel)]="day.closingTime" (change)="onTimeChange(day)" />
+                <input type="time" [attr.aria-label]="'Hora de cierre, ' + day.label" [(ngModel)]="day.closingTime" (change)="onTimeChange(day)" />
               </span>
             </div>
 
@@ -45,9 +45,9 @@
                 Almuerzo
               </span>
               <span class="time-range">
-                <input type="time" [(ngModel)]="day.lunchStart" (change)="onTimeChange(day)" />
+                <input type="time" [attr.aria-label]="'Inicio de almuerzo, ' + day.label" [(ngModel)]="day.lunchStart" (change)="onTimeChange(day)" />
                 <span>-</span>
-                <input type="time" [(ngModel)]="day.lunchEnd" (change)="onTimeChange(day)" />
+                <input type="time" [attr.aria-label]="'Fin de almuerzo, ' + day.label" [(ngModel)]="day.lunchEnd" (change)="onTimeChange(day)" />
               </span>
             </div>
           </div>

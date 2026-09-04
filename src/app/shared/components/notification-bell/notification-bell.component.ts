@@ -1,5 +1,6 @@
 import { Component, ElementRef, HostListener, computed, inject, signal } from '@angular/core';
-import { AppointmentNotification, RealtimeEventType } from '../../../core/models/realtime.model';
+import { Router } from '@angular/router';
+import { RealtimeEventType, RealtimeNotification } from '../../../core/models/realtime.model';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { formatRelativeTime } from '../../utils/date-utils';
 import { LucideIconComponent, LucideIconName } from '../lucide-icon/lucide-icon.component';
@@ -7,13 +8,15 @@ import { LucideIconComponent, LucideIconName } from '../lucide-icon/lucide-icon.
 const TYPE_TITLES: Record<RealtimeEventType, string> = {
   'appointment.created': 'Nueva cita agendada',
   'appointment.updated': 'Cita actualizada',
-  'appointment.cancelled': 'Cita cancelada'
+  'appointment.cancelled': 'Cita cancelada',
+  'chat.escalated': 'Un cliente necesita ayuda'
 };
 
 const TYPE_ICONS: Record<RealtimeEventType, LucideIconName> = {
   'appointment.created': 'calendar-check',
   'appointment.updated': 'refresh-cw',
-  'appointment.cancelled': 'calendar-x'
+  'appointment.cancelled': 'calendar-x',
+  'chat.escalated': 'message-circle'
 };
 
 @Component({
@@ -25,6 +28,7 @@ const TYPE_ICONS: Record<RealtimeEventType, LucideIconName> = {
 export class NotificationBellComponent {
   private readonly realtimeService = inject(RealtimeService);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
+  private readonly router = inject(Router);
 
   readonly isOpen = signal(false);
   readonly notifications = computed(() => this.realtimeService.notifications());
@@ -39,8 +43,19 @@ export class NotificationBellComponent {
     }
   }
 
-  selectNotification(notification: AppointmentNotification): void {
+  selectNotification(notification: RealtimeNotification): void {
     this.realtimeService.markAsRead(notification.id);
+    this.isOpen.set(false);
+
+    if (notification.type === 'chat.escalated') {
+      void this.router.navigate(['/business/chat', notification.sessionId]);
+    }
+  }
+
+  detailFor(notification: RealtimeNotification): string {
+    return notification.type === 'chat.escalated'
+      ? (notification.clientName ?? 'Un cliente') + ' esta esperando ayuda en el chat'
+      : `${notification.appointment.client_name} · ${notification.appointment.services?.name ?? 'Servicio'}`;
   }
 
   markAllAsRead(): void {

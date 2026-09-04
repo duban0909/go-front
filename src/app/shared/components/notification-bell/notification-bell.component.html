@@ -26,9 +26,7 @@
             <app-lucide-icon [name]="iconFor(notification.type)" [size]="18" [strokeWidth]="2" class="notif-item-icon" />
             <span class="notif-item-body">
               <span class="notif-title">{{ titleFor(notification.type) }}</span>
-              <span class="notif-detail">
-                {{ notification.appointment.client_name }} · {{ notification.appointment.services?.name ?? 'Servicio' }}
-              </span>
+              <span class="notif-detail">{{ detailFor(notification) }}</span>
               <span class="notif-time">{{ relativeTime(notification.receivedAt) }}</span>
             </span>
           </button>

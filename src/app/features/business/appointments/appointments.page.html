@@ -9,9 +9,14 @@
         <app-lucide-icon name="chevron-left" [size]="20" [strokeWidth]="2.2" />
       </button>
       <h2>{{ monthLabel() }}</h2>
-      <button type="button" class="nav-btn" (click)="shiftWeek(7)" aria-label="Semana siguiente">
-        <app-lucide-icon name="chevron-right" [size]="20" [strokeWidth]="2.2" />
-      </button>
+      <div class="nav-btn-group">
+        <button type="button" class="nav-btn" (click)="shiftWeek(7)" aria-label="Semana siguiente">
+          <app-lucide-icon name="chevron-right" [size]="20" [strokeWidth]="2.2" />
+        </button>
+        <button type="button" class="nav-btn" (click)="openAvailabilityModal()" aria-label="Disponibilidad rapida">
+          <app-lucide-icon name="search" [size]="18" [strokeWidth]="2.2" />
+        </button>
+      </div>
     </div>
 
     <div class="week-grid">
@@ -127,8 +132,8 @@
     <form [formGroup]="form" (ngSubmit)="submit()" class="appointment-form">
       <p class="form-date">{{ fullDateLabel() }}</p>
 
-      <app-text-field label="Nombre del cliente" placeholder="Nombre" formControlName="client_name" />
-      <app-text-field label="Telefono" type="tel" placeholder="3000000000" formControlName="client_phone" />
+      <app-text-field label="Nombre del cliente" placeholder="Nombre" [showLabel]="true" formControlName="client_name" />
+      <app-text-field label="WhatsApp del cliente" type="tel" placeholder="3000000000" [showLabel]="true" formControlName="client_phone" />
 
       <label class="field-label">
         Servicio
@@ -152,12 +157,72 @@
 
       <label class="field-label">
         Hora
-        <input type="time" formControlName="time" class="time-input" />
+        <select formControlName="time" class="service-select">
+          @if (isLoadingSlots()) {
+            <option value="" disabled>Buscando horarios libres...</option>
+          } @else if (!form.controls.employee_id.value || !form.controls.service_id.value) {
+            <option value="" disabled>Selecciona empleado y servicio primero</option>
+          } @else if (availableSlots().length === 0) {
+            <option value="" disabled>No hay horarios disponibles ese dia</option>
+          } @else {
+            <option value="" disabled>Selecciona una hora</option>
+            @for (slot of availableSlots(); track slot) {
+              <option [value]="slot">{{ slot }}</option>
+            }
+          }
+        </select>
       </label>
 
       <app-button type="submit" [loading]="isSaving()">
         {{ isSaving() ? 'Agendando...' : 'Confirmar cita' }}
       </app-button>
+    </form>
+  </app-modal>
+}
+
+@if (isAvailabilityModalOpen()) {
+  <app-modal title="Disponibilidad rapida" (close)="closeAvailabilityModal()">
+    <form [formGroup]="availabilityForm" (ngSubmit)="searchAvailability()" class="appointment-form">
+      <label class="field-label">
+        Empleado
+        <select formControlName="employee_id" class="service-select">
+          <option value="" disabled>Selecciona un empleado</option>
+          @for (employee of employees(); track employee.id) {
+            <option [value]="employee.id">{{ employee.name || 'Sin nombre' }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field-label">
+        Servicio (opcional)
+        <select formControlName="service_id" class="service-select">
+          <option value="">Sin servicio (turnos de 30 min)</option>
+          @for (service of services(); track service.id) {
+            <option [value]="service.id">{{ service.name }} &middot; {{ service.duration_minutes }} min</option>
+          }
+        </select>
+      </label>
+
+      <label class="field-label">
+        Dia
+        <input type="date" formControlName="date" class="time-input" />
+      </label>
+
+      <app-button type="submit" [loading]="isLoadingAvailability()">
+        {{ isLoadingAvailability() ? 'Buscando...' : 'Buscar disponibilidad' }}
+      </app-button>
+
+      @if (!isLoadingAvailability()) {
+        @if (availabilitySlots().length > 0) {
+          <div class="availability-results">
+            @for (slot of availabilitySlots(); track slot) {
+              <span class="availability-chip">{{ slot }}</span>
+            }
+          </div>
+        } @else if (availabilityForm.controls.employee_id.value) {
+          <p class="hint-text">No hay horarios disponibles ese dia.</p>
+        }
+      }
     </form>
   </app-modal>
 }

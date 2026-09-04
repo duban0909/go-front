@@ -71,7 +71,7 @@
 @if (isInviteModalOpen()) {
   <app-modal title="Invitar empleado" (close)="closeInviteModal()">
     <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-form">
-      <app-text-field label="Nombre sugerido (opcional)" placeholder="Ej. Daniela" formControlName="employee_name" />
+      <app-text-field label="Nombre sugerido (opcional)" placeholder="Ej. Daniela" [showLabel]="true" formControlName="employee_name" />
 
       <app-button type="submit" [loading]="isInviting()">
         {{ isInviting() ? 'Generando...' : 'Generar codigo' }}

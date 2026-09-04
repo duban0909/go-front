@@ -1,0 +1,52 @@
+<section class="chat-session-page">
+  <header class="session-header">
+    <button type="button" class="back-btn" (click)="goBack()" aria-label="Volver">
+      <app-lucide-icon name="chevron-left" [size]="22" [strokeWidth]="2.2" />
+    </button>
+    <h1>Conversacion con cliente</h1>
+  </header>
+
+  @if (isLoading()) {
+    <div class="state-screen">
+      <p class="hint-text">Cargando conversacion...</p>
+    </div>
+  } @else if (notFound()) {
+    <div class="state-screen">
+      <app-lucide-icon name="message-circle" [size]="40" [strokeWidth]="1.6" />
+      <p class="hint-text">No se pudo cargar esta conversacion.</p>
+    </div>
+  } @else {
+    <div class="messages">
+      @for (message of messages(); track $index) {
+        <div class="bubble-row" [class.from-client]="message.role === 'user'">
+          <div class="bubble" [class.bubble-business]="message.role === 'assistant'" [innerHTML]="formatMessage(message.content)"></div>
+        </div>
+      } @empty {
+        <p class="hint-text">Todavia no hay mensajes en esta conversacion.</p>
+      }
+
+      <div #scrollAnchor></div>
+    </div>
+
+    @if (errorMessage()) {
+      <p class="chat-error" role="alert">{{ errorMessage() }}</p>
+    }
+
+    <div class="composer">
+      <textarea
+        #composerInput
+        rows="1"
+        placeholder="Responder al cliente..."
+        [value]="draft()"
+        (input)="onDraftInput($event)"
+        (keydown)="handleKeydown($event)"
+        [disabled]="isSending()"
+      ></textarea>
+      <button type="button" class="send-button" (click)="sendReply()" [disabled]="!canSend()" aria-label="Enviar respuesta">
+        <app-lucide-icon name="send" [size]="20" [strokeWidth]="2" />
+      </button>
+    </div>
+
+    <p class="hint-text session-hint">Al enviar una respuesta, el bot deja de responderle automaticamente a este cliente en esta conversacion.</p>
+  }
+</section>

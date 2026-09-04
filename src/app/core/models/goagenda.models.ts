@@ -101,6 +101,22 @@ export interface ManualAppointmentInput {
   fecha_hora: string;
 }
 
+export interface AvailableSlotsParams {
+  business_id: string;
+  employee_id: string;
+  date: string;
+  service_id?: string;
+}
+
+/** Respuesta de GET /appointments/available-slots: horas libres en formato "HH:mm". */
+export interface AvailableSlotsResponse {
+  business_id: string;
+  employee_id: string;
+  date: string;
+  duration_minutes: number;
+  available_slots: string[];
+}
+
 export interface PairingCodeInput {
   business_id: string;
   phone: string;
@@ -153,6 +169,10 @@ export interface ChatHistoryMessage {
 export interface ChatHistoryResponse {
   session_id: string;
   mensajes: ChatHistoryMessage[];
+}
+
+export interface BusinessChatReplyInput {
+  mensaje: string;
 }
 
 export interface QrCardInput {

@@ -12,7 +12,24 @@ export class SupabaseAuthService {
   private readonly client: SupabaseClient;
 
   constructor(private readonly sessionService: SessionService) {
-    this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+    this.client = createClient(environment.supabaseUrl, environment.supabaseAnonKey, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+
+    // Supabase renueva el access_token solo internamente (autoRefreshToken) y
+    // al recargar la pagina (INITIAL_SESSION); sin este listener, SessionService
+    // se queda con el token viejo hasta que expira y el usuario es desconectado
+    // aunque su sesion de Supabase siga viva.
+    this.client.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        this.sessionService.clearSession();
+        return;
+      }
+
+      if (session?.access_token) {
+        this.sessionService.saveAccessToken(session.access_token);
+      }
+    });
   }
 
   async signInWithPassword(email: string, password: string): Promise<void> {

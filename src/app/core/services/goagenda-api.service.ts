@@ -11,8 +11,11 @@ import {
   AdminBusinessesListResponse,
   AdminBusinessResponse,
   AiUsage,
+  AvailableSlotsParams,
+  AvailableSlotsResponse,
   BaileysStatus,
   BlockedUpdate,
+  BusinessChatReplyInput,
   BusinessHoursListResponse,
   BusinessInfoUpdate,
   BusinessSettings,
@@ -252,6 +255,19 @@ export class GoagendaApiService {
     return this.http.get<AppointmentsListResponse>(`${GOAGENDA_API_URL}/appointments`, { params: httpParams });
   }
 
+  getAvailableSlots(params: AvailableSlotsParams): Observable<AvailableSlotsResponse> {
+    let httpParams = new HttpParams()
+      .set('business_id', params.business_id)
+      .set('employee_id', params.employee_id)
+      .set('date', params.date);
+
+    if (params.service_id) {
+      httpParams = httpParams.set('service_id', params.service_id);
+    }
+
+    return this.http.get<AvailableSlotsResponse>(`${GOAGENDA_API_URL}/appointments/available-slots`, { params: httpParams });
+  }
+
   // Vinculacion de WhatsApp (Baileys)
   getBaileysStatus(businessId: string): Observable<BaileysStatus> {
     return this.http.get<BaileysStatus>(`${GOAGENDA_API_URL}/baileys/status`, {
@@ -287,6 +303,20 @@ export class GoagendaApiService {
   getChatHistory(businessId: string, sessionId: string, employeeId?: string): Observable<ChatHistoryMessage[]> {
     return this.http
       .get<ChatHistoryResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`)
+      .pipe(map((response) => response.mensajes));
+  }
+
+  // Conversaciones escaladas (vista autenticada del negocio)
+  getBusinessChatSession(businessId: string, sessionId: string): Observable<ChatHistoryMessage[]> {
+    return this.http
+      .get<ChatHistoryResponse>(`${GOAGENDA_API_URL}/business/${businessId}/chat-sessions/${sessionId}`)
+      .pipe(map((response) => response.mensajes));
+  }
+
+  replyToBusinessChatSession(businessId: string, sessionId: string, mensaje: string): Observable<ChatHistoryMessage[]> {
+    const payload: BusinessChatReplyInput = { mensaje };
+    return this.http
+      .post<ChatHistoryResponse>(`${GOAGENDA_API_URL}/business/${businessId}/chat-sessions/${sessionId}/reply`, payload)
       .pipe(map((response) => response.mensajes));
   }
 
