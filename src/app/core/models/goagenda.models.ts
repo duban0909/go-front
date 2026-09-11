@@ -169,6 +169,8 @@ export interface ChatHistoryMessage {
 export interface ChatHistoryResponse {
   session_id: string;
   mensajes: ChatHistoryMessage[];
+  /** Opciones de seleccion rapida pendientes del ultimo turno, si aplican (ver agent/graph.py:obtener_historial). */
+  opciones?: ChatOption[] | null;
 }
 
 export interface BusinessChatReplyInput {

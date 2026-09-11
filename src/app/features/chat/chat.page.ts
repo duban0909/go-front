@@ -1,7 +1,7 @@
-import { AfterViewChecked, Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { ChatOption } from '../../core/models/goagenda.models';
+import { ChatHistoryResponse, ChatOption } from '../../core/models/goagenda.models';
 import { GoagendaApiService } from '../../core/services/goagenda-api.service';
 import { LucideIconComponent } from '../../shared/components/lucide-icon/lucide-icon.component';
 
@@ -22,8 +22,8 @@ interface ChatBubble {
   templateUrl: './chat.page.html',
   styleUrl: './chat.page.css'
 })
-export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
-  @ViewChild('scrollAnchor') private readonly scrollAnchor?: ElementRef<HTMLDivElement>;
+export class ChatPageComponent implements OnInit, OnDestroy {
+  @ViewChild('messagesContainer') private readonly messagesContainer?: ElementRef<HTMLDivElement>;
   @ViewChild('composerInput') private readonly composerInput?: ElementRef<HTMLTextAreaElement>;
 
   readonly businessName = signal('');
@@ -50,8 +50,8 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
   private businessId = '';
   private employeeId = '';
   private sessionId = '';
-  private shouldScroll = false;
   private audioContext?: AudioContext;
+  private readonly pendingScrollTimeouts: ReturnType<typeof setTimeout>[] = [];
   private pollTimer?: ReturnType<typeof setInterval>;
   private readonly handleVisibilityChange = (): void => {
     if (typeof document === 'undefined') {
@@ -63,6 +63,24 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
     } else {
       this.pausePolling();
     }
+  };
+
+  /**
+   * Al abrirse el teclado en movil, algunos navegadores no achican el
+   * viewport de layout (solo el visual) — un `100dvh` fijo entonces deja
+   * el composer y parte de los mensajes tapados por el teclado (bug
+   * reportado por QA). Sincronizamos manualmente la altura real visible
+   * via visualViewport, que si refleja el espacio que el teclado dejo
+   * libre, y forzamos un reencuadre del scroll cuando cambia.
+   */
+  private readonly handleViewportResize = (): void => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      return;
+    }
+
+    const height = window.visualViewport?.height ?? window.innerHeight;
+    document.documentElement.style.setProperty('--chat-vh', `${height}px`);
+    this.queueScroll();
   };
 
   constructor(
@@ -88,20 +106,25 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
         this.resumePolling();
       }
     }
-  }
 
-  ngAfterViewChecked(): void {
-    if (this.shouldScroll) {
-      this.shouldScroll = false;
-      this.scrollAnchor?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    this.handleViewportResize();
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      window.visualViewport.addEventListener('resize', this.handleViewportResize);
+      window.visualViewport.addEventListener('scroll', this.handleViewportResize);
     }
   }
 
   ngOnDestroy(): void {
     this.pausePolling();
+    this.pendingScrollTimeouts.forEach((id) => clearTimeout(id));
 
     if (typeof document !== 'undefined') {
       document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    }
+
+    if (typeof window !== 'undefined' && window.visualViewport) {
+      window.visualViewport.removeEventListener('resize', this.handleViewportResize);
+      window.visualViewport.removeEventListener('scroll', this.handleViewportResize);
     }
   }
 
@@ -197,11 +220,11 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
 
     if (storedSessionId) {
       try {
-        const history = await firstValueFrom(
+        const response = await firstValueFrom(
           this.apiService.getChatHistory(this.businessId, storedSessionId, this.employeeId || undefined)
         );
         this.sessionId = storedSessionId;
-        this.messages.set(history.map((message) => ({ role: this.normalizeRole(message.role), content: message.content })));
+        this.applyHistory(response);
 
         if (this.messages().length === 0) {
           this.pushGreeting();
@@ -240,6 +263,28 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
   }
 
   /**
+   * Reconstruye messages() desde una respuesta de historial completa,
+   * reenganchando las opciones de seleccion rapida del ultimo turno si el
+   * backend las devolvio (ver ChatHistoryResponse.opciones) — sin esto,
+   * recargar la sesion (ej. el navegador recarga la pestaña al volver de
+   * segundo plano) perdia los botones de hora/servicio/empleado que ya
+   * estaban mostrados antes de recargar.
+   */
+  private applyHistory(response: ChatHistoryResponse): void {
+    const bubbles: ChatBubble[] = response.mensajes.map((message) => ({
+      role: this.normalizeRole(message.role),
+      content: message.content
+    }));
+
+    const last = bubbles.at(-1);
+    if (last && last.role === 'assistant' && response.opciones) {
+      last.options = response.opciones;
+    }
+
+    this.messages.set(bubbles);
+  }
+
+  /**
    * Consulta cada POLL_INTERVAL_MS si hay mensajes nuevos que el cliente
    * todavia no ve — asi, si el dueño responde manualmente desde el panel
    * (agent/graph.py:enviar_respuesta_humana) mientras esta pestaña sigue
@@ -268,14 +313,19 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
 
     try {
-      const history = await firstValueFrom(
+      const response = await firstValueFrom(
         this.apiService.getChatHistory(this.businessId, this.sessionId, this.employeeId || undefined)
       );
 
-      if (history.length > this.messages().length) {
-        const nuevos = history
+      if (response.mensajes.length > this.messages().length) {
+        const nuevos: ChatBubble[] = response.mensajes
           .slice(this.messages().length)
           .map((message) => ({ role: this.normalizeRole(message.role), content: message.content }));
+
+        const last = nuevos.at(-1);
+        if (last && last.role === 'assistant' && response.opciones) {
+          last.options = response.opciones;
+        }
 
         this.messages.update((current) => [...current, ...nuevos]);
         this.playNotificationSound();
@@ -294,8 +344,33 @@ export class ChatPageComponent implements OnInit, AfterViewChecked, OnDestroy {
     }
   }
 
+  /**
+   * Baja el scroll al fondo del todo. Un solo intento justo despues de
+   * actualizar messages() a veces quedaba corto (bug reportado por QA):
+   * el navegador reajusta el layout un instante despues (scroll
+   * anchoring, iconos SVG, emojis) y el mensaje nuevo terminaba
+   * parcialmente oculto. Por eso se reafirma varias veces en una ventana
+   * corta en vez de una sola vez; `scroll-behavior: smooth` en .messages
+   * (chat.page.css) anima cada reajuste sin saltos bruscos.
+   */
   private queueScroll(): void {
-    this.shouldScroll = true;
+    const container = this.messagesContainer?.nativeElement;
+    if (!container) {
+      return;
+    }
+
+    this.pendingScrollTimeouts.forEach((id) => clearTimeout(id));
+    this.pendingScrollTimeouts.length = 0;
+
+    const snap = () => {
+      container.scrollTop = container.scrollHeight;
+    };
+
+    snap();
+    requestAnimationFrame(snap);
+    [60, 220, 500].forEach((delay) => {
+      this.pendingScrollTimeouts.push(setTimeout(snap, delay));
+    });
   }
 
   private playNotificationSound(): void {

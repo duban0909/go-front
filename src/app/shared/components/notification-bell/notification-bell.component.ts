@@ -2,7 +2,7 @@ import { Component, ElementRef, HostListener, computed, inject, signal } from '@
 import { Router } from '@angular/router';
 import { RealtimeEventType, RealtimeNotification } from '../../../core/models/realtime.model';
 import { RealtimeService } from '../../../core/services/realtime.service';
-import { formatRelativeTime } from '../../utils/date-utils';
+import { formatRelativeTime, toDateKey } from '../../utils/date-utils';
 import { LucideIconComponent, LucideIconName } from '../lucide-icon/lucide-icon.component';
 
 const TYPE_TITLES: Record<RealtimeEventType, string> = {
@@ -49,6 +49,11 @@ export class NotificationBellComponent {
 
     if (notification.type === 'chat.escalated') {
       void this.router.navigate(['/business/chat', notification.sessionId]);
+    } else {
+      const dateKey = toDateKey(new Date(notification.appointment.scheduled_at));
+      void this.router.navigate(['/business/appointments'], {
+        queryParams: { date: dateKey, highlight: notification.appointment.id }
+      });
     }
   }
 

@@ -300,10 +300,8 @@ export class GoagendaApiService {
     });
   }
 
-  getChatHistory(businessId: string, sessionId: string, employeeId?: string): Observable<ChatHistoryMessage[]> {
-    return this.http
-      .get<ChatHistoryResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`)
-      .pipe(map((response) => response.mensajes));
+  getChatHistory(businessId: string, sessionId: string, employeeId?: string): Observable<ChatHistoryResponse> {
+    return this.http.get<ChatHistoryResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`);
   }
 
   // Conversaciones escaladas (vista autenticada del negocio)

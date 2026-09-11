@@ -42,7 +42,7 @@
       </p>
     }
 
-    <div class="messages">
+    <div class="messages" #messagesContainer>
       @for (message of messages(); track $index) {
         <div class="bubble-row" [class.from-user]="message.role === 'user'">
           @if (message.role === 'assistant') {
@@ -72,8 +72,6 @@
           }
         </div>
       }
-
-      <div #scrollAnchor></div>
     </div>
 
     @if (errorMessage()) {

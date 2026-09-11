@@ -1,12 +1,15 @@
 :host {
   display: block;
-  min-height: 100dvh;
+  height: 100dvh;
+  height: var(--chat-vh, 100dvh);
 }
 
 .chat-page {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
+  height: 100dvh;
+  height: var(--chat-vh, 100dvh);
+  overflow: hidden;
   background: var(--go-bg);
 }
 
@@ -45,8 +48,7 @@
 }
 
 .chat-header {
-  position: sticky;
-  top: 0;
+  flex-shrink: 0;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -158,6 +160,8 @@
   gap: 0.65rem;
   padding: 1rem 1rem 0.5rem;
   overflow-y: auto;
+  overflow-anchor: none;
+  scroll-behavior: smooth;
 }
 
 .bubble-row {
@@ -268,8 +272,7 @@
 }
 
 .composer {
-  position: sticky;
-  bottom: 0;
+  flex-shrink: 0;
   display: flex;
   align-items: flex-end;
   gap: 0.6rem;

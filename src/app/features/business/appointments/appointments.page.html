@@ -79,7 +79,12 @@
     } @else {
       <div class="appointment-list">
         @for (appointment of appointmentsForSelectedDay(); track appointment.id) {
-          <article class="appointment-card" [class]="'status-' + appointment.status">
+          <article
+            class="appointment-card"
+            [class]="'status-' + appointment.status"
+            [class.highlighted]="appointment.id === highlightedAppointmentId()"
+            [attr.data-appointment-id]="appointment.id"
+          >
             <span class="appointment-icon">
               <app-lucide-icon name="clock" [size]="20" [strokeWidth]="1.9" />
             </span>

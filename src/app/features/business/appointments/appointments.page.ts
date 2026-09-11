@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
@@ -65,6 +66,9 @@ export class AppointmentsPageComponent implements OnInit {
   readonly isAvailabilityModalOpen = signal(false);
   readonly availabilitySlots = signal<string[]>([]);
   readonly isLoadingAvailability = signal(false);
+  readonly highlightedAppointmentId = signal<string | null>(null);
+  private pendingHighlightId: string | null = null;
+  private highlightTimeout?: ReturnType<typeof setTimeout>;
 
   readonly weekDays = computed(() => getWeekDays(this.selectedDate()));
   readonly monthLabel = computed(() => formatMonthYear(this.selectedDate()));
@@ -86,7 +90,9 @@ export class AppointmentsPageComponent implements OnInit {
   constructor(
     private readonly formBuilder: FormBuilder,
     private readonly apiService: GoagendaApiService,
-    private readonly sessionService: SessionService
+    private readonly sessionService: SessionService,
+    private readonly route: ActivatedRoute,
+    private readonly router: Router
   ) {
     this.form = this.formBuilder.nonNullable.group({
       client_name: ['', [Validators.required]],
@@ -114,6 +120,67 @@ export class AppointmentsPageComponent implements OnInit {
         void this.loadAppointments();
       }
     });
+
+    // Al llegar desde el link de una notificacion (?date=...&highlight=...):
+    // posiciona el calendario en ese dia y deja pendiente el resaltado hasta
+    // que la cita realmente exista en appointments() (puede llegar antes de
+    // que loadAppointments() termine).
+    this.route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const dateParam = params.get('date');
+      const highlightId = params.get('highlight');
+
+      if (!dateParam && !highlightId) {
+        return;
+      }
+
+      if (dateParam) {
+        const parsed = new Date(`${dateParam}T00:00:00`);
+        if (!isNaN(parsed.getTime())) {
+          this.selectedDate.set(parsed);
+        }
+      }
+
+      if (highlightId) {
+        this.pendingHighlightId = highlightId;
+        this.tryHighlightPending();
+      }
+
+      void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
+    });
+
+    effect(() => {
+      this.appointments();
+      this.tryHighlightPending();
+    });
+  }
+
+  /**
+   * Resalta la cita apuntada por una notificacion (bug QA: el click en la
+   * notificacion no hacia nada) reintentando hasta que appointments() ya
+   * la tenga cargada, ya que el click puede llegar a esta pagina antes de
+   * que loadAppointments() termine.
+   */
+  private tryHighlightPending(): void {
+    if (!this.pendingHighlightId) {
+      return;
+    }
+
+    const id = this.pendingHighlightId;
+    if (!this.appointments().some((appointment) => appointment.id === id)) {
+      return;
+    }
+
+    this.pendingHighlightId = null;
+    this.highlightedAppointmentId.set(id);
+
+    setTimeout(() => {
+      document.querySelector(`[data-appointment-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 50);
+
+    if (this.highlightTimeout) {
+      clearTimeout(this.highlightTimeout);
+    }
+    this.highlightTimeout = setTimeout(() => this.highlightedAppointmentId.set(null), 2500);
   }
 
   ngOnInit(): void {
