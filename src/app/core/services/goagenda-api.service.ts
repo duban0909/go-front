@@ -47,6 +47,8 @@ import {
   InvitationCodeResponse,
   ManualAppointmentInput,
   MeResponse,
+  OnboardingCompleteInput,
+  OnboardingStepUpdate,
   PairingCodeInput,
   PairingCodeResponse,
   QrCardInput,
@@ -186,6 +188,14 @@ export class GoagendaApiService {
 
   updateFcmToken(payload: FcmTokenUpdate): Observable<unknown> {
     return this.http.put(`${GOAGENDA_API_URL}/business-settings/fcm-token`, payload);
+  }
+
+  updateOnboardingStep(payload: OnboardingStepUpdate): Observable<unknown> {
+    return this.http.put(`${GOAGENDA_API_URL}/business-settings/onboarding-step`, payload);
+  }
+
+  completeOnboarding(payload: OnboardingCompleteInput): Observable<unknown> {
+    return this.http.post(`${GOAGENDA_API_URL}/business-settings/onboarding/complete`, payload);
   }
 
   // Horarios

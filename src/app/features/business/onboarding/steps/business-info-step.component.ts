@@ -1,0 +1,107 @@
+import { Component, EventEmitter, Input, OnInit, Output, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
+import { GoagendaApiService } from '../../../../core/services/goagenda-api.service';
+import { SessionService } from '../../../../core/services/session.service';
+import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
+import { UiTextFieldComponent } from '../../../../shared/components/ui-text-field/ui-text-field.component';
+
+@Component({
+  selector: 'app-onboarding-business-info',
+  imports: [ReactiveFormsModule, UiButtonComponent, UiTextFieldComponent],
+  templateUrl: './business-info-step.component.html',
+  styleUrl: './step.css'
+})
+export class BusinessInfoStepComponent implements OnInit {
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly apiService = inject(GoagendaApiService);
+  private readonly sessionService = inject(SessionService);
+
+  @Input({ required: true }) businessId!: string;
+  @Output() readonly next = new EventEmitter<void>();
+  @Output() readonly back = new EventEmitter<void>();
+
+  readonly isLoading = signal(false);
+  readonly isSaving = signal(false);
+  readonly error = signal('');
+
+  readonly form = this.formBuilder.nonNullable.group({
+    name: ['', [Validators.required]],
+    owner_name: ['', [Validators.required]],
+    phone_number: ['', [Validators.required]]
+  });
+
+  get nameError(): string | null {
+    return this.form.controls.name.touched && this.form.controls.name.hasError('required')
+      ? 'El nombre del negocio es obligatorio.'
+      : null;
+  }
+
+  get ownerNameError(): string | null {
+    return this.form.controls.owner_name.touched && this.form.controls.owner_name.hasError('required')
+      ? 'Tu nombre es obligatorio.'
+      : null;
+  }
+
+  get phoneError(): string | null {
+    return this.form.controls.phone_number.touched && this.form.controls.phone_number.hasError('required')
+      ? 'El WhatsApp del negocio es obligatorio.'
+      : null;
+  }
+
+  ngOnInit(): void {
+    void this.loadCurrentData();
+  }
+
+  private async loadCurrentData(): Promise<void> {
+    if (!this.businessId) {
+      return;
+    }
+
+    this.isLoading.set(true);
+
+    try {
+      const settings = await firstValueFrom(this.apiService.getBusinessSettings(this.businessId));
+      this.form.patchValue({
+        // "name" de businesses lo exige el super admin al crear el negocio, asi que
+        // ya trae un valor real (no un default vacio/placeholder) que el dueño puede
+        // corregir aqui mismo antes de continuar.
+        name: settings.name ?? '',
+        owner_name: this.sessionService.currentEmployment()?.name ?? '',
+        phone_number: settings.phone_number ?? ''
+      });
+    } catch {
+      this.error.set('No se pudo cargar la informacion del negocio.');
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async submit(): Promise<void> {
+    if (this.form.invalid || this.isSaving()) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const { name, owner_name, phone_number } = this.form.getRawValue();
+    const employeeId = this.sessionService.employeeId();
+    this.isSaving.set(true);
+    this.error.set('');
+
+    try {
+      await firstValueFrom(
+        this.apiService.updateBusinessInfo({ business_id: this.businessId, name: name.trim(), phone_number: phone_number.trim() })
+      );
+
+      if (employeeId) {
+        await firstValueFrom(this.apiService.updateEmployee(employeeId, { name: owner_name.trim() }));
+      }
+
+      this.next.emit();
+    } catch {
+      this.error.set('No se pudo guardar la informacion del negocio.');
+    } finally {
+      this.isSaving.set(false);
+    }
+  }
+}

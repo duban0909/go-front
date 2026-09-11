@@ -1,0 +1,52 @@
+<form class="step" [formGroup]="form" (ngSubmit)="saveAndContinue()">
+  <h1>Tu primer servicio</h1>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (savedServices().length > 0) {
+    <ul class="saved-list">
+      @for (service of savedServices(); track service.id) {
+        <li>
+          <span>{{ service.name }}</span>
+          <span class="saved-meta">{{ service.duration_minutes }} min · {{ service.price | copCurrency }}</span>
+        </li>
+      }
+    </ul>
+  }
+
+  <div class="field-group">
+    <app-text-field
+      label="Nombre del servicio"
+      placeholder="Ej. Manicure"
+      [showLabel]="true"
+      formControlName="name"
+      [error]="nameError"
+    />
+    <app-text-field
+      label="Duracion (minutos)"
+      type="number"
+      [min]="5"
+      placeholder="30"
+      [showLabel]="true"
+      formControlName="duration_minutes"
+      [error]="durationError"
+    />
+    <app-text-field
+      label="Precio"
+      type="number"
+      [min]="0"
+      placeholder="40000"
+      [showLabel]="true"
+      formControlName="price"
+      [error]="priceError"
+    />
+  </div>
+
+  <div class="step-actions">
+    <app-button type="submit" [loading]="isSaving()">Guardar y continuar</app-button>
+    <app-button type="button" variant="ghost" [disabled]="isSaving()" (click)="addAnother()">+ Agregar otro servicio</app-button>
+    <app-button type="button" variant="ghost" [disabled]="isSaving()" (click)="back.emit()">Atras</app-button>
+  </div>
+</form>

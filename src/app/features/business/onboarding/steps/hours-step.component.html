@@ -1,0 +1,20 @@
+<div class="step">
+  <h1>¿Cual es tu horario?</h1>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <app-weekly-hours-editor [days]="days()" [isLoading]="isLoading()" (dayToggled)="toggleDay($event)" (dayTimesChanged)="onTimeChange($event)" />
+
+  <app-button type="button" variant="ghost" (click)="applyToAllDays()">Aplicar a todos los dias</app-button>
+
+  @if (!canContinue()) {
+    <p class="hint-text">Activa al menos un dia para poder continuar.</p>
+  }
+
+  <div class="step-actions">
+    <app-button type="button" [disabled]="!canContinue()" (click)="next.emit()">Continuar</app-button>
+    <app-button type="button" variant="ghost" (click)="back.emit()">Atras</app-button>
+  </div>
+</div>

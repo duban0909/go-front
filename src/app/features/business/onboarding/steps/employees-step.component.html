@@ -1,0 +1,34 @@
+<div class="step">
+  <h1>¿Trabajas con alguien mas?</h1>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <ul class="saved-list">
+    @for (employee of employees(); track employee.id) {
+      <li>
+        <span>{{ employee.name || 'Sin nombre' }}</span>
+        <span class="saved-meta">{{ employee.role === 'owner' ? 'Dueño' : 'Empleado' }} · {{ employee.active ? 'Activo' : 'Inactivo' }}</span>
+      </li>
+    }
+  </ul>
+
+  @if (generatedCode()) {
+    <div class="code-display">
+      <p class="code-value">{{ generatedCode() }}</p>
+      <app-button type="button" variant="ghost" (click)="copyCode()">{{ codeCopied() ? 'Copiado' : 'Copiar codigo' }}</app-button>
+      <p class="hint-text">Comparte este codigo con tu empleado para que lo valide al registrarse.</p>
+    </div>
+  } @else {
+    <form class="field-group" [formGroup]="inviteForm" (ngSubmit)="submitInvite()">
+      <app-text-field label="Nombre sugerido (opcional)" placeholder="Ej. Daniela" [showLabel]="true" formControlName="employee_name" />
+      <app-button type="submit" variant="ghost" [loading]="isInviting()">+ Invitar empleado</app-button>
+    </form>
+  }
+
+  <div class="step-actions">
+    <app-button type="button" (click)="next.emit()">Omitir por ahora</app-button>
+    <app-button type="button" variant="ghost" (click)="back.emit()">Atras</app-button>
+  </div>
+</div>

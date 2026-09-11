@@ -1,0 +1,23 @@
+<div class="step">
+  <h1>¡Todo listo! ✅</h1>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (!isLoading()) {
+    <p class="lead">{{ businessName() }}</p>
+    <p class="hint-text">
+      {{ serviceCount() }} servicio{{ serviceCount() === 1 ? '' : 's' }} · {{ activeDaysCount() }} dia{{ activeDaysCount() === 1 ? '' : 's' }} de horario activo{{ activeDaysCount() === 1 ? '' : 's' }} · {{ employeeCount() }} empleado{{ employeeCount() === 1 ? '' : 's' }}
+    </p>
+
+    <app-button type="button" variant="ghost" (click)="openChatPreview()">Ver mi chat de prueba</app-button>
+
+    <app-chat-link-qr-card [businessId]="businessId" [chatLink]="chatLink()" [businessName]="businessName()" [whatsapp]="whatsapp()" />
+  }
+
+  <div class="step-actions">
+    <app-button type="button" [loading]="isActivating()" (click)="onActivate()">Activar mi negocio</app-button>
+    <app-button type="button" variant="ghost" [disabled]="isActivating()" (click)="back.emit()">Atras</app-button>
+  </div>
+</div>

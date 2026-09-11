@@ -79,3 +79,40 @@ export const businessInfoGuard: CanActivateFn = async () => {
 
   return true;
 };
+
+/**
+ * Bloquea todo el panel de negocio (Citas, Servicios, Horario, Empleados,
+ * Ajustes) hasta que el onboarding guiado quede completo. Va en la ruta
+ * padre "business", asi que corre una sola vez al entrar al subarbol y
+ * cubre todos los hijos sin tener que repetirlo en cada uno.
+ */
+export const businessOnboardedGuard: CanActivateFn = async () => {
+  const router = inject(Router);
+  const sessionService = inject(SessionService);
+
+  await sessionService.ensureLoaded();
+
+  if (!sessionService.onboardingCompleted()) {
+    return router.createUrlTree(['/business/onboarding']);
+  }
+
+  return true;
+};
+
+/** Protege la ruta del wizard: solo el dueño puede entrar, y solo mientras el onboarding siga pendiente. */
+export const businessOnboardingWizardGuard: CanActivateFn = async () => {
+  const router = inject(Router);
+  const sessionService = inject(SessionService);
+
+  await sessionService.ensureLoaded();
+
+  if (sessionService.role() !== 'owner') {
+    return router.createUrlTree([resolveHomeRoute(sessionService)]);
+  }
+
+  if (sessionService.onboardingCompleted()) {
+    return router.createUrlTree(['/business/appointments']);
+  }
+
+  return true;
+};

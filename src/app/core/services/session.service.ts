@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Employment, MeResponse } from '../models/goagenda.models';
@@ -23,6 +24,10 @@ export class SessionService {
   readonly businessId = computed(() => this.currentEmployment()?.business_id ?? '');
   readonly employeeId = computed(() => this.currentEmployment()?.employee_id ?? '');
   readonly role = computed(() => this.currentEmployment()?.role);
+  // Default true: si por algun motivo el campo no llega, nunca se debe
+  // bloquear por accidente el panel de un negocio que ya funcionaba.
+  readonly onboardingCompleted = computed(() => this.currentEmployment()?.business_onboarding_completed ?? true);
+  readonly onboardingStep = computed(() => this.currentEmployment()?.business_onboarding_step ?? 1);
 
   get token(): string | null {
     return this.accessToken();
@@ -53,7 +58,18 @@ export class SessionService {
     }
 
     this.loadPromise ??= this.fetchMe();
-    return this.loadPromise;
+    const me = await this.loadPromise;
+
+    // Si la carga fallo por algo transitorio (ver fetchMe: no se cerro la
+    // sesion), se libera la memoizacion para que el siguiente intento
+    // vuelva a pedir /me en vez de quedar con este fallo cacheado para
+    // siempre y seguir mandando al usuario a login con un token que en
+    // realidad todavia es valido.
+    if (!me && this.accessToken()) {
+      this.loadPromise = null;
+    }
+
+    return me;
   }
 
   /** Fuerza un re-fetch de GET /me (ej: despues de redimir un codigo de invitacion). */
@@ -80,10 +96,21 @@ export class SessionService {
       const me = await firstValueFrom(this.apiService.getMe());
       this.me.set(me);
       return me;
-    } catch {
-      this.clearSession();
+    } catch (error) {
+      // Solo un rechazo real de credenciales (401/403) significa que la
+      // sesion quedo invalida y hay que cerrarla. Cualquier otro fallo (caida
+      // de red, 500, timeout) es transitorio: antes esto cerraba la sesion
+      // completa ante CUALQUIER error de /me, lo que desconectaba al usuario
+      // por un simple hipo de conexion aunque su token siguiera siendo valido.
+      if (this.isAuthError(error)) {
+        this.clearSession();
+      }
       return null;
     }
+  }
+
+  private isAuthError(error: unknown): boolean {
+    return error instanceof HttpErrorResponse && (error.status === 401 || error.status === 403);
   }
 
   private async fetchBusinessInfoComplete(): Promise<boolean> {

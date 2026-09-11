@@ -72,7 +72,7 @@
             <button type="button" class="icon-btn edit" (click)="openEditModal(service)" aria-label="Editar servicio">
               <app-lucide-icon name="pencil" [size]="18" [strokeWidth]="2" />
             </button>
-            <button type="button" class="icon-btn delete" (click)="deleteService(service)" aria-label="Eliminar servicio">
+            <button type="button" class="icon-btn delete" (click)="askDelete(service)" aria-label="Eliminar servicio">
               <app-lucide-icon name="trash-2" [size]="18" [strokeWidth]="2" />
             </button>
           </div>
@@ -100,13 +100,49 @@
 @if (isModalOpen()) {
   <app-modal [title]="editingService() ? 'Editar servicio' : 'Nuevo servicio'" (close)="closeModal()">
     <form [formGroup]="form" (ngSubmit)="submit()" class="service-form">
-      <app-text-field label="Nombre del servicio" placeholder="Ej. Corte de Cabello" [showLabel]="true" formControlName="name" />
-      <app-text-field label="Duracion (minutos)" type="number" placeholder="30" [showLabel]="true" formControlName="duration_minutes" />
-      <app-text-field label="Precio" type="number" placeholder="25000" [showLabel]="true" formControlName="price" />
+      <app-text-field
+        label="Nombre del servicio"
+        placeholder="Ej. Corte de Cabello"
+        [showLabel]="true"
+        formControlName="name"
+        [error]="nameError"
+      />
+      <app-text-field
+        label="Duracion (minutos)"
+        type="number"
+        placeholder="30"
+        [min]="5"
+        [showLabel]="true"
+        formControlName="duration_minutes"
+        [error]="durationError"
+      />
+      <app-text-field
+        label="Precio"
+        type="number"
+        placeholder="25000"
+        [min]="0"
+        [showLabel]="true"
+        formControlName="price"
+        [error]="priceError"
+      />
 
       <app-button type="submit" [loading]="isSaving()">
         {{ isSaving() ? 'Guardando...' : 'Guardar servicio' }}
       </app-button>
     </form>
+  </app-modal>
+}
+
+@if (deleteTarget(); as target) {
+  <app-modal title="Eliminar servicio" (close)="cancelDelete()">
+    <div class="confirm-body">
+      <p>
+        ¿Eliminar <strong>{{ target.name }}</strong>? Esta accion no se puede deshacer.
+      </p>
+      <div class="confirm-actions">
+        <app-button type="button" variant="ghost" (click)="cancelDelete()">Cancelar</app-button>
+        <app-button type="button" [loading]="isDeleting()" (click)="confirmDelete()">Eliminar</app-button>
+      </div>
+    </div>
   </app-modal>
 }

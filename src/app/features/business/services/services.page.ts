@@ -24,6 +24,13 @@ export class ServicesPageComponent implements OnInit {
   readonly isSaving = signal(false);
   readonly isModalOpen = signal(false);
   readonly editingService = signal<ServiceItem | null>(null);
+  readonly deleteTarget = signal<ServiceItem | null>(null);
+  readonly isDeleting = signal(false);
+
+  // Nada de < > { } ni comillas: el nombre se muestra tal cual a los
+  // clientes en el chat, y un nombre con pinta de codigo (ej. una etiqueta
+  // <script>) se ve roto ahi aunque el navegador lo escape sin riesgo real.
+  private static readonly NOMBRE_SERVICIO_PATTERN = /^[a-zA-Z0-9À-ÿñÑ\s.,'&%/!¡¿()-]+$/;
 
   readonly form;
 
@@ -33,10 +40,52 @@ export class ServicesPageComponent implements OnInit {
     private readonly sessionService: SessionService
   ) {
     this.form = this.formBuilder.nonNullable.group({
-      name: ['', [Validators.required]],
+      name: ['', [Validators.required, Validators.pattern(ServicesPageComponent.NOMBRE_SERVICIO_PATTERN)]],
       duration_minutes: [30, [Validators.required, Validators.min(5)]],
       price: [0, [Validators.required, Validators.min(0)]]
     });
+  }
+
+  get nameError(): string | null {
+    const control = this.form.controls.name;
+    if (!control.touched) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return 'El nombre del servicio es obligatorio.';
+    }
+    if (control.hasError('pattern')) {
+      return 'Usa solo letras, numeros, espacios y signos basicos (nada de < > { } ni comillas).';
+    }
+    return null;
+  }
+
+  get durationError(): string | null {
+    const control = this.form.controls.duration_minutes;
+    if (!control.touched) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return 'La duracion es obligatoria.';
+    }
+    if (control.hasError('min')) {
+      return 'La duracion debe ser de al menos 5 minutos.';
+    }
+    return null;
+  }
+
+  get priceError(): string | null {
+    const control = this.form.controls.price;
+    if (!control.touched) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return 'El precio es obligatorio.';
+    }
+    if (control.hasError('min')) {
+      return 'El precio no puede ser negativo.';
+    }
+    return null;
   }
 
   ngOnInit(): void {
@@ -92,15 +141,18 @@ export class ServicesPageComponent implements OnInit {
     }
 
     const { name, duration_minutes, price } = this.form.getRawValue();
+    const trimmedName = name.trim();
     this.isSaving.set(true);
 
     try {
       const editing = this.editingService();
 
       if (editing) {
-        await firstValueFrom(this.apiService.updateService(editing.id, { name, duration_minutes, price }));
+        await firstValueFrom(this.apiService.updateService(editing.id, { name: trimmedName, duration_minutes, price }));
       } else {
-        await firstValueFrom(this.apiService.createService({ business_id: businessId, name, duration_minutes, price }));
+        await firstValueFrom(
+          this.apiService.createService({ business_id: businessId, name: trimmedName, duration_minutes, price })
+        );
       }
 
       this.isModalOpen.set(false);
@@ -112,12 +164,31 @@ export class ServicesPageComponent implements OnInit {
     }
   }
 
-  async deleteService(service: ServiceItem): Promise<void> {
+  askDelete(service: ServiceItem): void {
+    this.deleteTarget.set(service);
+  }
+
+  cancelDelete(): void {
+    this.deleteTarget.set(null);
+  }
+
+  async confirmDelete(): Promise<void> {
+    const service = this.deleteTarget();
+
+    if (!service || this.isDeleting()) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+
     try {
       await firstValueFrom(this.apiService.deleteService(service.id));
       this.services.update((items) => items.filter((item) => item.id !== service.id));
+      this.deleteTarget.set(null);
     } catch {
       this.error.set('No se pudo eliminar el servicio.');
+    } finally {
+      this.isDeleting.set(false);
     }
   }
 }

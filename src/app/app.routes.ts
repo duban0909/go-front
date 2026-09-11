@@ -1,5 +1,15 @@
 import { Routes } from '@angular/router';
-import { businessInfoGuard, onboardingGuard, ownerGuard, sessionGuard, staffGuard, superAdminGuard } from './core/guards/session.guard';
+import {
+	businessInfoGuard,
+	businessOnboardedGuard,
+	businessOnboardingWizardGuard,
+	onboardingGuard,
+	ownerGuard,
+	sessionGuard,
+	staffGuard,
+	superAdminGuard
+} from './core/guards/session.guard';
+import { OnboardingPageComponent } from './features/business/onboarding/onboarding.page';
 import { BusinessShellPageComponent } from './features/business/business-shell/business-shell.page';
 import { AppointmentsPageComponent } from './features/business/appointments/appointments.page';
 import { ChatSessionPageComponent } from './features/business/chat-session/chat-session.page';
@@ -53,8 +63,13 @@ export const routes: Routes = [
 		component: ChatPageComponent
 	},
 	{
+		path: 'business/onboarding',
+		canActivate: [sessionGuard, businessOnboardingWizardGuard],
+		component: OnboardingPageComponent
+	},
+	{
 		path: 'business',
-		canActivate: [sessionGuard, ownerGuard],
+		canActivate: [sessionGuard, ownerGuard, businessOnboardedGuard],
 		component: BusinessShellPageComponent,
 		children: [
 			{

@@ -47,6 +47,15 @@ export interface ReminderConfigUpdate {
   reminder_hours_before: number;
 }
 
+export interface OnboardingStepUpdate {
+  business_id: string;
+  step: number;
+}
+
+export interface OnboardingCompleteInput {
+  business_id: string;
+}
+
 export interface FcmTokenUpdate {
   business_id: string;
   fcm_token: string;
@@ -189,6 +198,8 @@ export interface Employment {
   business_id: string;
   business_name: string | null;
   business_blocked: boolean | null;
+  business_onboarding_completed: boolean;
+  business_onboarding_step: number;
   name: string | null;
   role: 'owner' | 'staff';
   active: boolean;

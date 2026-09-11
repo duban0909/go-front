@@ -1,0 +1,38 @@
+<form class="step" [formGroup]="form" (ngSubmit)="submit()">
+  <h1>Cuentanos de tu negocio</h1>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <div class="field-group">
+    <app-text-field
+      label="Nombre del negocio"
+      placeholder="Ej. Bella Estetica"
+      [showLabel]="true"
+      formControlName="name"
+      [error]="nameError"
+    />
+    <app-text-field
+      label="Tu nombre (empleado principal)"
+      placeholder="Ej. Daniel Velez"
+      [showLabel]="true"
+      formControlName="owner_name"
+      [error]="ownerNameError"
+    />
+    <app-text-field
+      label="WhatsApp del negocio"
+      type="tel"
+      inputmode="tel"
+      placeholder="Ej. 3001234567"
+      [showLabel]="true"
+      formControlName="phone_number"
+      [error]="phoneError"
+    />
+  </div>
+
+  <div class="step-actions">
+    <app-button type="submit" [loading]="isSaving()">Continuar</app-button>
+    <app-button type="button" variant="ghost" [disabled]="isSaving()" (click)="back.emit()">Atras</app-button>
+  </div>
+</form>

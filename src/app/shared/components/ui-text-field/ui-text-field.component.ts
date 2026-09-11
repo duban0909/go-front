@@ -35,6 +35,7 @@ let nextFieldId = 0;
           [placeholder]="placeholder || label"
           [disabled]="disabled()"
           [value]="value()"
+          [attr.min]="min ?? null"
           (input)="onInput($event)"
           (blur)="onTouched()"
         />
@@ -163,6 +164,7 @@ export class UiTextFieldComponent implements ControlValueAccessor {
   @Input() inputmode: 'text' | 'email' | 'tel' | 'numeric' | 'none' = 'text';
   @Input() error: string | null = null;
   @Input() showLabel = false;
+  @Input() min?: number;
   @Output() readonly valueChange = new EventEmitter<string>();
 
   readonly fieldId = `text-field-${nextFieldId++}`;
