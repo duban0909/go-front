@@ -13,6 +13,7 @@ import { UiButtonComponent } from '../ui-button/ui-button.component';
 export class ChatLinkQrCardComponent {
   private readonly apiService = inject(GoagendaApiService);
 
+  @Input({ required: true }) businessId!: string;
   @Input({ required: true }) chatLink!: string;
   @Input({ required: true }) businessName!: string;
   @Input({ required: true }) whatsapp!: string;
@@ -47,9 +48,8 @@ export class ChatLinkQrCardComponent {
     try {
       const qrCard = await firstValueFrom(
         this.apiService.generateQrCard({
-          chat_link: this.chatLink,
-          business_name: this.businessName,
-          whatsapp: this.whatsapp
+          business_id: this.businessId,
+          chat_link: this.chatLink
         })
       );
 

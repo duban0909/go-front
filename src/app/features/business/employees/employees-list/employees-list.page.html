@@ -57,7 +57,7 @@
 
           @if (expandedEmployeeId() === employee.id) {
             <div class="chat-link-wrap">
-              <app-chat-link-qr-card [chatLink]="chatLinkFor(employee)" [businessName]="businessName()" [whatsapp]="whatsapp()" />
+              <app-chat-link-qr-card [businessId]="businessId()" [chatLink]="chatLinkFor(employee)" [businessName]="businessName()" [whatsapp]="whatsapp()" />
             </div>
           }
         </article>

@@ -40,6 +40,8 @@ export class SettingsPageComponent implements OnInit {
   readonly form;
   readonly ownerNameForm;
 
+  readonly businessId = computed(() => this.sessionService.businessId() ?? '');
+
   readonly chatLink = computed(() => {
     const businessId = this.sessionService.businessId();
     return businessId ? `${window.location.origin}/chat/${businessId}` : '';

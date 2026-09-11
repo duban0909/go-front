@@ -37,6 +37,7 @@ export class EmployeesListPageComponent implements OnInit {
   readonly expandedEmployeeId = signal('');
 
   readonly businessName = computed(() => this.sessionService.currentEmployment()?.business_name ?? '');
+  readonly businessId = computed(() => this.sessionService.businessId() ?? '');
   readonly whatsapp = signal('');
 
   readonly inviteForm;

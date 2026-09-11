@@ -29,6 +29,7 @@ export class MyProfilePageComponent implements OnInit {
   readonly whatsapp = signal('');
 
   readonly businessName = computed(() => this.sessionService.currentEmployment()?.business_name ?? '');
+  readonly businessId = computed(() => this.sessionService.businessId() ?? '');
   readonly chatLink = computed(() => {
     const businessId = this.sessionService.businessId();
     const employeeId = this.sessionService.employeeId();

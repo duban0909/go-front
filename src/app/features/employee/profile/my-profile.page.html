@@ -37,7 +37,7 @@
       Mi enlace de chat
     </h2>
 
-    <app-chat-link-qr-card [chatLink]="chatLink()" [businessName]="businessName()" [whatsapp]="whatsapp()" />
+    <app-chat-link-qr-card [businessId]="businessId()" [chatLink]="chatLink()" [businessName]="businessName()" [whatsapp]="whatsapp()" />
   </article>
 
   <button type="button" class="logout-card" (click)="logout()" [disabled]="isLoggingOut()">

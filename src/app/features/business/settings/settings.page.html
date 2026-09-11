@@ -34,6 +34,7 @@
     </h3>
     <p class="hint-text">Comparte este con tus clientes para que agenden hablando con tu asistente virtual.</p>
     <app-chat-link-qr-card
+      [businessId]="businessId()"
       [chatLink]="chatLink()"
       [businessName]="form.controls.name.value"
       [whatsapp]="form.controls.phone_number.value"
@@ -47,6 +48,7 @@
     </h3>
     <p class="hint-text">Este es tuyo como empleado principal — siempre agenda contigo directamente.</p>
     <app-chat-link-qr-card
+      [businessId]="businessId()"
       [chatLink]="ownChatLink()"
       [businessName]="form.controls.name.value"
       [whatsapp]="form.controls.phone_number.value"

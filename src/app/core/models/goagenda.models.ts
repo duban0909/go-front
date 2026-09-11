@@ -178,9 +178,8 @@ export interface BusinessChatReplyInput {
 }
 
 export interface QrCardInput {
+  business_id: string;
   chat_link: string;
-  business_name: string;
-  whatsapp: string;
 }
 
 // --- Sesion / roles ---------------------------------------------------
