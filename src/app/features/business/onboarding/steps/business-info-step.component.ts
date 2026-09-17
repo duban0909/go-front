@@ -5,6 +5,7 @@ import { GoagendaApiService } from '../../../../core/services/goagenda-api.servi
 import { SessionService } from '../../../../core/services/session.service';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiTextFieldComponent } from '../../../../shared/components/ui-text-field/ui-text-field.component';
+import { WHATSAPP_PHONE_PATTERN, notBlankValidator } from '../../../../shared/utils/form-validators';
 
 @Component({
   selector: 'app-onboarding-business-info',
@@ -26,15 +27,19 @@ export class BusinessInfoStepComponent implements OnInit {
   readonly error = signal('');
 
   readonly form = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required]],
+    name: ['', [Validators.required, notBlankValidator]],
     owner_name: ['', [Validators.required]],
-    phone_number: ['', [Validators.required]]
+    phone_number: ['', [Validators.required, Validators.pattern(WHATSAPP_PHONE_PATTERN)]]
   });
 
   get nameError(): string | null {
-    return this.form.controls.name.touched && this.form.controls.name.hasError('required')
-      ? 'El nombre del negocio es obligatorio.'
-      : null;
+    if (!this.form.controls.name.touched) {
+      return null;
+    }
+    if (this.form.controls.name.hasError('required') || this.form.controls.name.hasError('blank')) {
+      return 'El nombre del negocio es obligatorio.';
+    }
+    return null;
   }
 
   get ownerNameError(): string | null {
@@ -44,9 +49,16 @@ export class BusinessInfoStepComponent implements OnInit {
   }
 
   get phoneError(): string | null {
-    return this.form.controls.phone_number.touched && this.form.controls.phone_number.hasError('required')
-      ? 'El WhatsApp del negocio es obligatorio.'
-      : null;
+    if (!this.form.controls.phone_number.touched) {
+      return null;
+    }
+    if (this.form.controls.phone_number.hasError('required')) {
+      return 'El WhatsApp del negocio es obligatorio.';
+    }
+    if (this.form.controls.phone_number.hasError('pattern')) {
+      return 'Ingresa un numero de WhatsApp valido (solo digitos, con codigo de pais opcional).';
+    }
+    return null;
   }
 
   ngOnInit(): void {

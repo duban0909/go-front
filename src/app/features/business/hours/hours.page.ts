@@ -6,7 +6,7 @@ import { SessionService } from '../../../core/services/session.service';
 import { DayHour } from '../../../core/models/goagenda.models';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { DayRowView, WeeklyHoursEditorComponent } from '../../../shared/components/weekly-hours-editor/weekly-hours-editor.component';
-import { DAY_DEFS, toApiTime, toInputTime } from '../../../shared/utils/day-hours';
+import { DAY_DEFS, isValidTimeRange, toApiTime, toInputTime } from '../../../shared/utils/day-hours';
 
 type DayRow = DayRowView;
 
@@ -113,6 +113,11 @@ export class HoursPageComponent implements OnInit {
     }
 
     this.error.set('');
+
+    if (day.isOpen && !isValidTimeRange(day.openingTime, day.closingTime)) {
+      this.error.set('La hora de cierre debe ser posterior a la hora de apertura.');
+      return;
+    }
 
     try {
       await firstValueFrom(

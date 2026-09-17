@@ -102,8 +102,15 @@
       <p class="hint-text">Cargando...</p>
     } @else {
       <form [formGroup]="form" (ngSubmit)="saveChanges()" class="settings-form">
-        <app-text-field label="Nombre del negocio" icon="user" [showLabel]="true" formControlName="name" />
-        <app-text-field label="Telefono de WhatsApp" icon="phone" type="tel" [showLabel]="true" formControlName="phone_number" />
+        <app-text-field label="Nombre del negocio" icon="user" [showLabel]="true" formControlName="name" [error]="nameError" />
+        <app-text-field
+          label="Telefono de WhatsApp"
+          icon="phone"
+          type="tel"
+          [showLabel]="true"
+          formControlName="phone_number"
+          [error]="phoneError"
+        />
 
         @if (successMessage()) {
           <p class="success-text">{{ successMessage() }}</p>

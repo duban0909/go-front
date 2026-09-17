@@ -10,6 +10,7 @@ import { LucideIconComponent } from '../../../shared/components/lucide-icon/luci
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { UiModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
 import { UiTextFieldComponent } from '../../../shared/components/ui-text-field/ui-text-field.component';
+import { WHATSAPP_PHONE_PATTERN, notBlankValidator } from '../../../shared/utils/form-validators';
 
 @Component({
   selector: 'app-settings-page',
@@ -61,12 +62,35 @@ export class SettingsPageComponent implements OnInit {
     private readonly router: Router
   ) {
     this.form = this.formBuilder.nonNullable.group({
-      name: ['', [Validators.required]],
-      phone_number: ['']
+      name: ['', [Validators.required, notBlankValidator]],
+      phone_number: ['', [Validators.required, Validators.pattern(WHATSAPP_PHONE_PATTERN)]]
     });
     this.ownerNameForm = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required]]
     });
+  }
+
+  get nameError(): string | null {
+    if (!this.form.controls.name.touched) {
+      return null;
+    }
+    if (this.form.controls.name.hasError('required') || this.form.controls.name.hasError('blank')) {
+      return 'El nombre del negocio es obligatorio.';
+    }
+    return null;
+  }
+
+  get phoneError(): string | null {
+    if (!this.form.controls.phone_number.touched) {
+      return null;
+    }
+    if (this.form.controls.phone_number.hasError('required')) {
+      return 'El WhatsApp del negocio es obligatorio.';
+    }
+    if (this.form.controls.phone_number.hasError('pattern')) {
+      return 'Ingresa un numero de WhatsApp valido (solo digitos, con codigo de pais opcional).';
+    }
+    return null;
   }
 
   ngOnInit(): void {
@@ -148,7 +172,9 @@ export class SettingsPageComponent implements OnInit {
     this.isSaving.set(true);
 
     try {
-      await firstValueFrom(this.apiService.updateBusinessInfo({ business_id: businessId, name, phone_number }));
+      await firstValueFrom(
+        this.apiService.updateBusinessInfo({ business_id: businessId, name: name.trim(), phone_number: phone_number.trim() })
+      );
       this.successMessage.set('Cambios guardados.');
     } catch {
       this.error.set('No se pudieron guardar los cambios.');

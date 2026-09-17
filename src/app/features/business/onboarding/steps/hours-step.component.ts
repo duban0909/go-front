@@ -4,7 +4,7 @@ import { DayHour } from '../../../../core/models/goagenda.models';
 import { GoagendaApiService } from '../../../../core/services/goagenda-api.service';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { DayRowView, WeeklyHoursEditorComponent } from '../../../../shared/components/weekly-hours-editor/weekly-hours-editor.component';
-import { DAY_DEFS, toApiTime, toInputTime } from '../../../../shared/utils/day-hours';
+import { DAY_DEFS, isValidTimeRange, toApiTime, toInputTime } from '../../../../shared/utils/day-hours';
 
 type DayRow = DayRowView;
 
@@ -109,6 +109,11 @@ export class HoursStepComponent implements OnInit {
     }
 
     this.error.set('');
+
+    if (day.isOpen && !isValidTimeRange(day.openingTime, day.closingTime)) {
+      this.error.set('La hora de cierre debe ser posterior a la hora de apertura.');
+      return;
+    }
 
     try {
       await firstValueFrom(

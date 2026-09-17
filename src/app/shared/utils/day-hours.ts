@@ -15,3 +15,8 @@ export function toInputTime(value: string | null, fallback: string): string {
 export function toApiTime(value: string): string {
   return value.length === 5 ? `${value}:00` : value;
 }
+
+/** Compara horas 'HH:mm' del mismo dia: la de cierre debe ser posterior a la de apertura. */
+export function isValidTimeRange(openingTime: string, closingTime: string): boolean {
+  return openingTime < closingTime;
+}
