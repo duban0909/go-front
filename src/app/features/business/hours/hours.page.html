@@ -14,7 +14,13 @@
     </span>
     <div>
       <p class="stat-label">Dias activos</p>
-      <p class="stat-value">{{ activeDaysCount() }} de 7</p>
+      <p class="stat-value">
+        @if (isLoading()) {
+          <span class="skeleton-line skeleton-value"></span>
+        } @else {
+          {{ activeDaysCount() }} de 7
+        }
+      </p>
       <p class="stat-caption">Dias de atencion por semana</p>
     </div>
   </article>
