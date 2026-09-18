@@ -41,7 +41,7 @@
         (ngModelChange)="onReminderChange($event)"
       >
         @for (option of reminderOptions; track option) {
-          <option [value]="option">{{ option }} horas</option>
+          <option [value]="option">{{ reminderLabel(option) }}</option>
         }
       </select>
       antes

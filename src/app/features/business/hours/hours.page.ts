@@ -10,7 +10,7 @@ import { DAY_DEFS, isValidTimeRange, toApiTime, toInputTime } from '../../../sha
 
 type DayRow = DayRowView;
 
-const REMINDER_OPTIONS = [1, 2, 3, 6, 12, 24, 48];
+const REMINDER_OPTIONS = [0.17, 0.5, 1, 2, 3, 6, 12, 24, 48];
 
 @Component({
   selector: 'app-hours-page',
@@ -134,6 +134,13 @@ export class HoursPageComponent implements OnInit {
     } catch {
       this.error.set('No se pudo guardar el horario de ese dia.');
     }
+  }
+
+  reminderLabel(hours: number): string {
+    if (hours < 1) {
+      return `${Math.round(hours * 60)} minutos`;
+    }
+    return hours === 1 ? '1 hora' : `${hours} horas`;
   }
 
   async onReminderChange(value: string): Promise<void> {
