@@ -1,0 +1,16 @@
+<div class="toast-stack" aria-live="polite">
+  @for (toast of toasts(); track toast.id) {
+    <div class="toast" role="status" tabindex="0" (click)="open(toast)" (keydown.enter)="open(toast)">
+      <span class="toast-icon">
+        <app-lucide-icon [name]="iconFor(toast.type)" [size]="20" [strokeWidth]="2" />
+      </span>
+      <span class="toast-body">
+        <span class="toast-title">{{ titleFor(toast.type) }}</span>
+        <span class="toast-detail">{{ detailFor(toast) }}</span>
+      </span>
+      <button type="button" class="toast-close" aria-label="Cerrar notificacion" (click)="dismiss($event, toast.id)">
+        <app-lucide-icon name="x" [size]="16" [strokeWidth]="2" />
+      </button>
+    </div>
+  }
+</div>

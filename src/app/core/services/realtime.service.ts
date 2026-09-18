@@ -5,6 +5,7 @@ import { SessionService } from './session.service';
 
 const WS_URL = GOAGENDA_API_URL.replace(/^http/, 'ws');
 const MAX_NOTIFICATIONS = 50;
+const TOAST_DURATION_MS = 6000;
 const RECONNECT_BASE_DELAY_MS = 1000;
 const RECONNECT_MAX_DELAY_MS = 30000;
 
@@ -34,6 +35,7 @@ export class RealtimeService {
 
   readonly notifications = signal<RealtimeNotification[]>([]);
   readonly unreadCount = computed(() => this.notifications().filter((n) => !n.read).length);
+  readonly toasts = signal<RealtimeNotification[]>([]);
   readonly connected = signal(false);
   readonly lastEvent = signal<RealtimeMessage | null>(null);
 
@@ -63,6 +65,10 @@ export class RealtimeService {
     if (Notification.permission === 'default') {
       void Notification.requestPermission();
     }
+  }
+
+  dismissToast(id: string): void {
+    this.toasts.update((list) => list.filter((n) => n.id !== id));
   }
 
   markAsRead(id: string): void {
@@ -186,6 +192,9 @@ export class RealtimeService {
 
     this.lastEvent.set(message);
     this.notifications.update((list) => [notification, ...list].slice(0, MAX_NOTIFICATIONS));
+
+    this.toasts.update((list) => [notification, ...list].slice(0, 3));
+    setTimeout(() => this.dismissToast(notification.id), TOAST_DURATION_MS);
 
     this.playNotificationSound();
     this.showBrowserNotification(message);
