@@ -98,8 +98,6 @@ export class RealtimeService {
     }
 
     this.socket.onopen = () => {
-      this.connected.set(true);
-      this.reconnectAttempts = 0;
       this.socket?.send(JSON.stringify({ type: 'auth', token }));
     };
 
@@ -109,7 +107,10 @@ export class RealtimeService {
       this.socket?.close();
     };
 
-    this.socket.onclose = () => {
+    this.socket.onclose = (event: CloseEvent) => {
+      if (event.code >= 4400) {
+        console.warn(`[realtime] conexion cerrada por el servidor (codigo ${event.code})`);
+      }
       this.connected.set(false);
       this.socket = null;
 
@@ -154,6 +155,12 @@ export class RealtimeService {
     try {
       message = JSON.parse(event.data);
     } catch {
+      return;
+    }
+
+    if ((message as { type?: string })?.type === 'auth_ok') {
+      this.connected.set(true);
+      this.reconnectAttempts = 0;
       return;
     }
 
