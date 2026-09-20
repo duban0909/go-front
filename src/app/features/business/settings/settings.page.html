@@ -8,120 +8,230 @@
     <p class="error-banner" role="alert">{{ error() }}</p>
   }
 
-  <article class="card">
-    <h2>
-      <span class="card-icon">
-        <app-lucide-icon name="message-circle" [size]="20" [strokeWidth]="1.9" />
-      </span>
-      Enlaces de chat
-      <span class="chat-status" [class.chat-status-off]="!chatEnabled()">
-        {{ chatEnabled() ? 'Activo' : 'Inactivo' }}
-      </span>
-    </h2>
+  <div class="tabs" role="tablist" aria-label="Secciones de ajustes">
+    <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'general'" [attr.aria-selected]="activeTab() === 'general'" (click)="activeTab.set('general')">General</button>
+    <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'chat'" [attr.aria-selected]="activeTab() === 'chat'" (click)="activeTab.set('chat')">Chat</button>
+    <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'domicilios'" [attr.aria-selected]="activeTab() === 'domicilios'" (click)="activeTab.set('domicilios')">Domicilios</button>
+  </div>
 
-    @if (!chatEnabled()) {
-      <p class="chat-hint-warning">
-        El agendamiento automatico aun no esta activo para tu plan. Los enlaces funcionan, pero el asistente no podra
-        agendar citas hasta activarlo.
+  @switch (activeTab()) {
+    @case ('general') {
+    <article class="card">
+      <h2>
+        <span class="card-icon">
+          <app-lucide-icon name="user" [size]="20" [strokeWidth]="1.9" />
+        </span>
+        Tu nombre
+      </h2>
+      <p class="hint-text">
+        Este es tu nombre como empleado principal — aparece cuando un cliente elige con quien agendar por chat.
       </p>
-    }
 
-    <h3 class="link-subheading">
-      Enlace general
-      <button type="button" class="info-btn" (click)="isLinksInfoModalOpen.set(true)" aria-label="Que es el enlace general">
-        <app-lucide-icon name="info" [size]="16" [strokeWidth]="2" />
-      </button>
-    </h3>
-    <p class="hint-text">Comparte este con tus clientes para que agenden hablando con tu asistente virtual.</p>
-    <app-chat-link-qr-card
-      [businessId]="businessId()"
-      [chatLink]="chatLink()"
-      [businessName]="form.controls.name.value"
-      [whatsapp]="form.controls.phone_number.value"
-    />
+      <form [formGroup]="ownerNameForm" (ngSubmit)="saveOwnerName()" class="settings-form">
+        <app-text-field label="Tu nombre" icon="user" [showLabel]="true" formControlName="name" />
 
-    <h3 class="link-subheading">
-      Tu enlace personal
-      <button type="button" class="info-btn" (click)="isLinksInfoModalOpen.set(true)" aria-label="Que es el enlace personal">
-        <app-lucide-icon name="info" [size]="16" [strokeWidth]="2" />
-      </button>
-    </h3>
-    <p class="hint-text">Este es tuyo como empleado principal — siempre agenda contigo directamente.</p>
-    <app-chat-link-qr-card
-      [businessId]="businessId()"
-      [chatLink]="ownChatLink()"
-      [businessName]="form.controls.name.value"
-      [whatsapp]="form.controls.phone_number.value"
-    />
-  </article>
+        @if (ownerNameSuccess()) {
+          <p class="success-text">{{ ownerNameSuccess() }}</p>
+        }
 
-  <article class="card">
-    <h2>
+        <app-button type="submit" [loading]="isSavingOwnerName()">
+          {{ isSavingOwnerName() ? 'Guardando...' : 'Guardar nombre' }}
+        </app-button>
+      </form>
+    </article>
+
+    <a routerLink="/business/employees" class="link-card">
       <span class="card-icon">
         <app-lucide-icon name="user" [size]="20" [strokeWidth]="1.9" />
       </span>
-      Tu nombre
-    </h2>
-    <p class="hint-text">
-      Este es tu nombre como empleado principal — aparece cuando un cliente elige con quien agendar por chat.
-    </p>
+      <div class="link-card-copy">
+        <h2>Empleados</h2>
+        <p>Invita empleados y administra sus horarios y servicios</p>
+      </div>
+      <app-lucide-icon name="chevron-right" [size]="20" [strokeWidth]="2" />
+    </a>
 
-    <form [formGroup]="ownerNameForm" (ngSubmit)="saveOwnerName()" class="settings-form">
-      <app-text-field label="Tu nombre" icon="user" [showLabel]="true" formControlName="name" />
+    <article class="card">
+      <h2>
+        <span class="card-icon">
+          <app-lucide-icon name="store" [size]="20" [strokeWidth]="1.9" />
+        </span>
+        Datos del negocio
+      </h2>
 
-      @if (ownerNameSuccess()) {
-        <p class="success-text">{{ ownerNameSuccess() }}</p>
+      @if (isLoading()) {
+        <p class="hint-text">Cargando...</p>
+      } @else {
+        <form [formGroup]="form" (ngSubmit)="saveChanges()" class="settings-form">
+          <app-text-field label="Nombre del negocio" icon="user" [showLabel]="true" formControlName="name" [error]="nameError" />
+          <app-text-field
+            label="Telefono de WhatsApp"
+            icon="phone"
+            type="tel"
+            [showLabel]="true"
+            formControlName="phone_number"
+            [error]="phoneError"
+          />
+
+          @if (successMessage()) {
+            <p class="success-text">{{ successMessage() }}</p>
+          }
+
+          <app-button type="submit" [loading]="isSaving()">
+            {{ isSaving() ? 'Guardando...' : 'Guardar cambios' }}
+          </app-button>
+        </form>
+      }
+    </article>
+    }
+    @case ('chat') {
+    <article class="card">
+      <h2>
+        <span class="card-icon">
+          <app-lucide-icon name="message-circle" [size]="20" [strokeWidth]="1.9" />
+        </span>
+        Enlaces de chat
+        <span class="chat-status" [class.chat-status-off]="!chatEnabled()">
+          {{ chatEnabled() ? 'Activo' : 'Inactivo' }}
+        </span>
+      </h2>
+
+      @if (!chatEnabled()) {
+        <p class="chat-hint-warning">
+          El agendamiento automatico aun no esta activo para tu plan. Los enlaces funcionan, pero el asistente no podra
+          agendar citas hasta activarlo.
+        </p>
       }
 
-      <app-button type="submit" [loading]="isSavingOwnerName()">
-        {{ isSavingOwnerName() ? 'Guardando...' : 'Guardar nombre' }}
-      </app-button>
-    </form>
-  </article>
+      <h3 class="link-subheading">
+        Enlace general
+        <button type="button" class="info-btn" (click)="isLinksInfoModalOpen.set(true)" aria-label="Que es el enlace general">
+          <app-lucide-icon name="info" [size]="16" [strokeWidth]="2" />
+        </button>
+      </h3>
+      <p class="hint-text">Comparte este con tus clientes para que agenden hablando con tu asistente virtual.</p>
+      <app-chat-link-qr-card
+        [businessId]="businessId()"
+        [chatLink]="chatLink()"
+        [businessName]="form.controls.name.value"
+        [whatsapp]="form.controls.phone_number.value"
+      />
 
-  <a routerLink="/business/employees" class="link-card">
-    <span class="card-icon">
-      <app-lucide-icon name="user" [size]="20" [strokeWidth]="1.9" />
-    </span>
-    <div class="link-card-copy">
-      <h2>Empleados</h2>
-      <p>Invita empleados y administra sus horarios y servicios</p>
-    </div>
-    <app-lucide-icon name="chevron-right" [size]="20" [strokeWidth]="2" />
-  </a>
-
-  <article class="card">
-    <h2>
-      <span class="card-icon">
-        <app-lucide-icon name="store" [size]="20" [strokeWidth]="1.9" />
-      </span>
-      Datos del negocio
-    </h2>
-
-    @if (isLoading()) {
-      <p class="hint-text">Cargando...</p>
-    } @else {
-      <form [formGroup]="form" (ngSubmit)="saveChanges()" class="settings-form">
-        <app-text-field label="Nombre del negocio" icon="user" [showLabel]="true" formControlName="name" [error]="nameError" />
-        <app-text-field
-          label="Telefono de WhatsApp"
-          icon="phone"
-          type="tel"
-          [showLabel]="true"
-          formControlName="phone_number"
-          [error]="phoneError"
-        />
-
-        @if (successMessage()) {
-          <p class="success-text">{{ successMessage() }}</p>
-        }
-
-        <app-button type="submit" [loading]="isSaving()">
-          {{ isSaving() ? 'Guardando...' : 'Guardar cambios' }}
-        </app-button>
-      </form>
+      <h3 class="link-subheading">
+        Tu enlace personal
+        <button type="button" class="info-btn" (click)="isLinksInfoModalOpen.set(true)" aria-label="Que es el enlace personal">
+          <app-lucide-icon name="info" [size]="16" [strokeWidth]="2" />
+        </button>
+      </h3>
+      <p class="hint-text">Este es tuyo como empleado principal — siempre agenda contigo directamente.</p>
+      <app-chat-link-qr-card
+        [businessId]="businessId()"
+        [chatLink]="ownChatLink()"
+        [businessName]="form.controls.name.value"
+        [whatsapp]="form.controls.phone_number.value"
+      />
+    </article>
     }
-  </article>
+    @case ('domicilios') {
+      <article class="card">
+        <h2>
+          <span class="card-icon">
+            <app-lucide-icon name="map-pin" [size]="20" [strokeWidth]="1.9" />
+          </span>
+          Domicilios
+        </h2>
+        <p class="hint-text zone-hint">
+          Activa esta opcion si tu negocio atiende clientes a domicilio. Se habilitan el menu Domicilios, el switch en
+          cada servicio, la cita a domicilio en Citas y el asistente del chat empezara a ofrecerlos.
+        </p>
+        @if (zoneError() && !homeVisitsEnabled()) {
+          <p class="error-banner" role="alert">{{ zoneError() }}</p>
+        }
+        <label class="home-switch">
+          <span class="home-switch-text">
+            <strong>Ofrezco servicios a domicilio</strong>
+            <small>{{ homeVisitsEnabled() ? 'Activado' : 'Desactivado' }}</small>
+          </span>
+          <input
+            type="checkbox"
+            role="switch"
+            [checked]="homeVisitsEnabled()"
+            [disabled]="isTogglingHomeVisits()"
+            (change)="toggleHomeVisits()"
+          />
+          <span class="home-switch-track" aria-hidden="true"></span>
+        </label>
+      </article>
+
+      @if (homeVisitsEnabled()) {
+    <article class="card">
+      <h2>
+        <span class="card-icon">
+          <app-lucide-icon name="map-pin" [size]="20" [strokeWidth]="1.9" />
+        </span>
+        Politicas de domicilio
+      </h2>
+      <p class="hint-text zone-hint">
+        Agrega los municipios o zonas donde haces domicilios y cuanto cobras de recargo en cada uno. El chat solo agenda
+        domicilios en estas zonas. Si no agregas ninguna, se atiende cualquier direccion sin recargo.
+      </p>
+
+      @if (zoneError()) {
+        <p class="error-banner" role="alert">{{ zoneError() }}</p>
+      }
+
+      <ul class="zone-list">
+        @for (zone of zones(); track zone.id) {
+          <li class="zone-item" [class.inactive]="!zone.active && editingZoneId() !== zone.id" [class.editing]="editingZoneId() === zone.id">
+          @if (editingZoneId() === zone.id) {
+            <form [formGroup]="editZoneForm" (ngSubmit)="saveEditZone(zone)" class="zone-edit-form">
+              <app-text-field label="Municipio o zona" [showLabel]="true" formControlName="name" />
+              <app-text-field label="Recargo (COP)" type="number" [min]="0" [showLabel]="true" formControlName="fee" />
+              <div class="zone-edit-actions">
+                <button type="submit" class="zone-btn primary" [disabled]="isUpdatingZone()">
+                  {{ isUpdatingZone() ? 'Guardando...' : 'Guardar' }}
+                </button>
+                <button type="button" class="zone-btn" (click)="cancelEditZone()">Cancelar</button>
+              </div>
+            </form>
+          } @else {
+            <span class="zone-info">
+              <strong>{{ zone.name }}</strong>
+              <small>Recargo: {{ zone.fee | copCurrency }}</small>
+            </span>
+            <button type="button" class="zone-btn" (click)="startEditZone(zone)">Editar</button>
+            <button type="button" class="zone-btn" (click)="toggleZone(zone)">{{ zone.active ? 'Activa' : 'Inactiva' }}</button>
+            <button type="button" class="zone-btn danger" (click)="deleteZone(zone)" aria-label="Eliminar zona">Eliminar</button>
+          }
+        </li>
+        } @empty {
+          <li class="zone-empty">Aun no hay zonas configuradas.</li>
+        }
+      </ul>
+
+      <form [formGroup]="zoneForm" (ngSubmit)="addZone()" class="settings-form">
+        <app-text-field
+          label="Municipio o zona"
+          placeholder="Ej. Betulia"
+          [showLabel]="true"
+          formControlName="name"
+          [error]="zoneNameError"
+        />
+        <app-text-field
+          label="Recargo por domicilio (COP)"
+          type="number"
+          placeholder="50000"
+          [min]="0"
+          [showLabel]="true"
+          formControlName="fee"
+          [error]="zoneFeeError"
+        />
+        <app-button type="submit" [loading]="isSavingZone()">Agregar zona</app-button>
+      </form>
+    </article>
+      }
+    }
+  }
 
   <button type="button" class="logout-card" (click)="logout()" [disabled]="isLoggingOut()">
     <app-lucide-icon name="log-out" [size]="20" [strokeWidth]="2" />

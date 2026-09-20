@@ -1,0 +1,77 @@
+<section class="page">
+  <header class="page-header">
+    <h1>Domicilios</h1>
+    <p>Citas a domicilio pendientes por atender</p>
+  </header>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <div class="visit-list" aria-hidden="true">
+      @for (row of skeletonRows; track row) {
+        <article class="visit-card">
+          <div class="skeleton-line" style="width: 45%; height: 1.05rem"></div>
+          <div class="skeleton-line" style="width: 70%; margin-top: 0.7rem"></div>
+          <div class="skeleton-line" style="width: 85%; margin-top: 0.5rem"></div>
+        </article>
+      }
+    </div>
+  } @else if (visits().length === 0) {
+    <p class="hint-text">No hay domicilios pendientes.</p>
+  } @else {
+    <div class="visit-list">
+      @for (visit of visits(); track visit.id) {
+        <article class="visit-card">
+          <p class="visit-when">
+            <app-lucide-icon name="clock" [size]="16" [strokeWidth]="2" />
+            {{ formatWhen(visit) }}
+          </p>
+          <h3>{{ visit.services?.name ?? 'Servicio' }}</h3>
+          @if (visit.services) {
+            <p class="visit-meta">{{ visit.services.duration_minutes }} min · {{ visit.services.price | copCurrency }}</p>
+          }
+          <p class="visit-row">
+            <app-lucide-icon name="user" [size]="16" [strokeWidth]="2" />
+            {{ visit.client_name }}
+          </p>
+          <p class="visit-row">
+            <app-lucide-icon name="phone" [size]="16" [strokeWidth]="2" />
+            {{ displayPhone(visit.client_phone) }}
+          </p>
+          <p class="visit-row">
+            <app-lucide-icon name="map-pin" [size]="16" [strokeWidth]="2" />
+            @if (visit.address) {
+              <a [href]="mapsUrl(visit.address)" target="_blank" rel="noopener noreferrer">{{ visit.address }}</a>
+            } @else {
+              Sin direccion
+            }
+          </p>
+          @if (visit.home_visit_zone) {
+            <p class="visit-row">
+              <app-lucide-icon name="map-pin" [size]="16" [strokeWidth]="2" />
+              {{ visit.home_visit_zone }}
+              @if (visit.home_visit_fee > 0) {
+                &middot; recargo {{ visit.home_visit_fee | copCurrency }}
+              }
+            </p>
+          }
+          <div class="visit-actions">
+            <a class="action-btn whatsapp" [href]="whatsappUrl(visit.client_phone)" target="_blank" rel="noopener noreferrer">
+              <app-lucide-icon name="message-circle" [size]="18" [strokeWidth]="2" />
+              WhatsApp
+            </a>
+            <a class="action-btn call" [href]="callUrl(visit.client_phone)">
+              <app-lucide-icon name="phone" [size]="18" [strokeWidth]="2" />
+              Llamar
+            </a>
+          </div>
+          @if (visit.employees?.name) {
+            <p class="visit-employee">Atiende: {{ visit.employees?.name }}</p>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>

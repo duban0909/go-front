@@ -62,6 +62,12 @@
               <span class="dot">|</span>
               <strong>{{ service.price | copCurrency }}</strong>
             </p>
+            @if (homeVisitsEnabled() && service.offers_home_visit) {
+              <span class="home-badge">
+                <app-lucide-icon name="map-pin" [size]="13" [strokeWidth]="2.2" />
+                A domicilio
+              </span>
+            }
             <span class="status-badge" [class.inactive]="!service.active">
               <app-lucide-icon name="circle-check-big" [size]="14" [strokeWidth]="2.2" />
               {{ service.active ? 'Activo' : 'Inactivo' }}
@@ -125,6 +131,17 @@
         formControlName="price"
         [error]="priceError"
       />
+
+      @if (homeVisitsEnabled()) {
+        <label class="home-switch">
+          <span class="home-switch-text">
+            <strong>Se puede hacer a domicilio</strong>
+            <small>El chat le preguntara al cliente si lo quiere en el local o a domicilio.</small>
+          </span>
+          <input type="checkbox" formControlName="offers_home_visit" role="switch" />
+          <span class="home-switch-track" aria-hidden="true"></span>
+        </label>
+      }
 
       <app-button type="submit" [loading]="isSaving()">
         {{ isSaving() ? 'Guardando...' : 'Guardar servicio' }}

@@ -1,0 +1,75 @@
+<div class="step">
+  <h1>¿Haces servicios a domicilio?</h1>
+  <p class="lead">Es opcional. Puedes activarlo o cambiarlo luego en Ajustes.</p>
+
+  @if (error()) {
+    <p class="error-banner" role="alert">{{ error() }}</p>
+  }
+
+  <label class="home-switch">
+    <span class="home-switch-text">
+      <strong>Ofrezco servicios a domicilio</strong>
+      <small>{{ enabled() ? 'Activado' : 'Desactivado' }}</small>
+    </span>
+    <input type="checkbox" role="switch" [checked]="enabled()" [disabled]="isToggling()" (change)="toggleEnabled()" />
+    <span class="home-switch-track" aria-hidden="true"></span>
+  </label>
+
+  @if (enabled()) {
+    <section class="field-group">
+      <h2 class="sub-title">¿Que servicios se pueden hacer a domicilio?</h2>
+      @if (services().length === 0) {
+        <p class="hint-text">Aun no tienes servicios. Podras marcarlos despues en Servicios.</p>
+      }
+      @for (service of services(); track service.id) {
+        <label class="home-switch">
+          <span class="home-switch-text">
+            <strong>{{ service.name }}</strong>
+            <small>{{ service.duration_minutes }} min · {{ service.price | copCurrency }}</small>
+          </span>
+          <input type="checkbox" role="switch" [checked]="service.offers_home_visit" (change)="toggleService(service)" />
+          <span class="home-switch-track" aria-hidden="true"></span>
+        </label>
+      }
+    </section>
+
+    <section class="field-group">
+      <h2 class="sub-title">¿A donde llegas y cuanto cobras de recargo?</h2>
+      <p class="hint-text">
+        Agrega los municipios o zonas donde haces domicilios. El asistente solo agendara domicilios en estas zonas. Si no
+        agregas ninguna, atiende cualquier direccion sin recargo.
+      </p>
+
+      <ul class="saved-list">
+        @for (zone of zones(); track zone.id) {
+          <li>
+            <span>{{ zone.name }}</span>
+            <span class="saved-meta">
+              Recargo {{ zone.fee | copCurrency }}
+              <button type="button" class="link-btn" (click)="deleteZone(zone)" aria-label="Eliminar zona">Quitar</button>
+            </span>
+          </li>
+        }
+      </ul>
+
+      <form class="field-group" [formGroup]="zoneForm" (ngSubmit)="addZone()">
+        <app-text-field label="Municipio o zona" placeholder="Ej. Betulia" [showLabel]="true" formControlName="name" [error]="zoneNameError" />
+        <app-text-field
+          label="Recargo por domicilio (COP)"
+          type="number"
+          placeholder="50000"
+          [min]="0"
+          [showLabel]="true"
+          formControlName="fee"
+          [error]="zoneFeeError"
+        />
+        <app-button type="submit" variant="ghost" [loading]="isAddingZone()">+ Agregar zona</app-button>
+      </form>
+    </section>
+  }
+
+  <div class="step-actions">
+    <app-button type="button" (click)="next.emit()">{{ enabled() ? 'Continuar' : 'Omitir por ahora' }}</app-button>
+    <app-button type="button" variant="ghost" (click)="back.emit()">Atras</app-button>
+  </div>
+</div>

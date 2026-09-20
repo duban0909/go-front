@@ -14,5 +14,6 @@ import { NotificationBellComponent } from '../../../shared/components/notificati
 export class BusinessShellPageComponent {
   private readonly sessionService = inject(SessionService);
 
+  readonly homeVisitsEnabled = computed(() => this.sessionService.homeVisitsEnabled());
   readonly isBlocked = computed(() => Boolean(this.sessionService.currentEmployment()?.business_blocked));
 }

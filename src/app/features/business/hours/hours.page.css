@@ -128,3 +128,10 @@
     padding: 1.5rem 2rem 2.5rem;
   }
 }
+
+.skeleton-select {
+  display: inline-block;
+  width: 5.5rem;
+  height: 1.3rem;
+  vertical-align: middle;
+}

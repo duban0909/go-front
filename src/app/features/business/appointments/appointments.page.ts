@@ -3,6 +3,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
+import { HomeVisitZone } from '../../../core/models/goagenda.models';
+import { notBlankValidator } from '../../../shared/utils/form-validators';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { RealtimeService } from '../../../core/services/realtime.service';
 import { SessionService } from '../../../core/services/session.service';
@@ -53,6 +55,8 @@ export class AppointmentsPageComponent implements OnInit {
   readonly today = new Date();
   readonly selectedDate = signal(new Date());
   readonly services = signal<ServiceItem[]>([]);
+  readonly zones = signal<HomeVisitZone[]>([]);
+  readonly homeVisitsEnabled = computed(() => this.sessionService.homeVisitsEnabled());
   readonly employees = signal<Employee[]>([]);
   readonly appointments = signal<AppointmentView[]>([]);
   readonly isLoading = signal(false);
@@ -99,7 +103,10 @@ export class AppointmentsPageComponent implements OnInit {
       client_phone: ['', [Validators.required]],
       service_id: ['', [Validators.required]],
       employee_id: ['', [Validators.required]],
-      time: ['', [Validators.required]]
+      time: ['', [Validators.required]],
+      is_home_visit: [false],
+      address: [''],
+      zone: ['']
     });
 
     this.availabilityForm = this.formBuilder.nonNullable.group({
@@ -110,7 +117,41 @@ export class AppointmentsPageComponent implements OnInit {
 
     // Recalcula los turnos libres cada vez que cambia el empleado o el servicio elegido.
     this.form.controls.employee_id.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => void this.refreshAvailableSlots());
-    this.form.controls.service_id.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => void this.refreshAvailableSlots());
+    this.form.controls.service_id.valueChanges.pipe(takeUntilDestroyed()).subscribe(() => {
+      void this.refreshAvailableSlots();
+
+      // Un servicio que no se hace a domicilio no puede quedar marcado como domicilio.
+      if (!this.selectedServiceOffersHomeVisit && this.form.controls.is_home_visit.value) {
+        this.form.controls.is_home_visit.setValue(false);
+      }
+    });
+
+    // La direccion solo es obligatoria (y editable) cuando la cita es a domicilio.
+    this.form.controls.is_home_visit.valueChanges.pipe(takeUntilDestroyed()).subscribe((isHomeVisit) => {
+      const address = this.form.controls.address;
+
+      if (isHomeVisit && !this.selectedServiceOffersHomeVisit) {
+        this.form.controls.is_home_visit.setValue(false);
+        return;
+      }
+
+      const zone = this.form.controls.zone;
+
+      if (isHomeVisit) {
+        address.setValidators([Validators.required, notBlankValidator]);
+        // Si el negocio definio zonas de cobertura, hay que elegir una.
+        if (this.zones().length > 0) {
+          zone.setValidators([Validators.required]);
+        }
+      } else {
+        address.clearValidators();
+        address.setValue('');
+        zone.clearValidators();
+        zone.setValue('');
+      }
+      address.updateValueAndValidity();
+      zone.updateValueAndValidity();
+    });
 
     // Recarga el calendario cuando llega un evento de cita (no de chat) del negocio activo por WebSocket.
     effect(() => {
@@ -200,6 +241,13 @@ export class AppointmentsPageComponent implements OnInit {
     } catch {
       this.error.set('No se pudo cargar el catalogo de servicios.');
     }
+
+    try {
+      const zones = await firstValueFrom(this.apiService.listHomeVisitZones(businessId));
+      this.zones.set(zones.filter((zone) => zone.active));
+    } catch {
+      this.zones.set([]);
+    }
   }
 
   async loadEmployees(): Promise<void> {
@@ -288,7 +336,16 @@ export class AppointmentsPageComponent implements OnInit {
 
   openAgendarModal(): void {
     const defaultEmployeeId = this.sessionService.currentEmployment()?.employee_id ?? '';
-    this.form.reset({ client_name: '', client_phone: '', service_id: '', employee_id: defaultEmployeeId, time: '' });
+    this.form.reset({
+      client_name: '',
+      client_phone: '',
+      service_id: '',
+      employee_id: defaultEmployeeId,
+      time: '',
+      is_home_visit: false,
+      address: '',
+      zone: ''
+    });
     this.isModalOpen.set(true);
     void this.refreshAvailableSlots();
   }
@@ -368,6 +425,21 @@ export class AppointmentsPageComponent implements OnInit {
     }
   }
 
+  get selectedServiceOffersHomeVisit(): boolean {
+    const serviceId = this.form.controls.service_id.value;
+    return this.services().find((service) => service.id === serviceId)?.offers_home_visit ?? false;
+  }
+
+  get selectedZoneFee(): number {
+    const name = this.form.controls.zone.value;
+    return this.zones().find((zone) => zone.name === name)?.fee ?? 0;
+  }
+
+  get addressError(): string | null {
+    const control = this.form.controls.address;
+    return control.touched && control.invalid ? 'La direccion del cliente es obligatoria.' : null;
+  }
+
   async submit(): Promise<void> {
     const businessId = this.sessionService.businessId();
 
@@ -376,7 +448,7 @@ export class AppointmentsPageComponent implements OnInit {
       return;
     }
 
-    const { client_name, client_phone, service_id, employee_id, time } = this.form.getRawValue();
+    const { client_name, client_phone, service_id, employee_id, time, is_home_visit, address, zone } = this.form.getRawValue();
     const dateKey = toDateKey(this.selectedDate());
     const fecha_hora = `${dateKey}T${time}:00`;
 
@@ -391,7 +463,8 @@ export class AppointmentsPageComponent implements OnInit {
           client_name,
           client_phone,
           service_id,
-          fecha_hora
+          fecha_hora,
+          ...(is_home_visit ? { address: address.trim(), ...(zone ? { zone } : {}) } : {})
         })
       );
 

@@ -11,6 +11,10 @@ export interface AppointmentRecord {
   status: AppointmentStatus;
   created_at: string;
   reminder_sent: boolean;
+  is_home_visit: boolean;
+  address: string | null;
+  home_visit_zone: string | null;
+  home_visit_fee: number;
 }
 
 /** Fila de GET /appointments: la cita cruda mas el servicio y el empleado resueltos via join. */
@@ -32,6 +36,7 @@ export interface ListAppointmentsParams {
   status?: AppointmentStatus;
   date_from?: string;
   date_to?: string;
+  home_visit?: boolean;
   limit?: number;
   offset?: number;
 }

@@ -116,3 +116,11 @@ export const businessOnboardingWizardGuard: CanActivateFn = async () => {
 
   return true;
 };
+
+/** La pantalla de Domicilios solo existe cuando el negocio activo el flag en Ajustes. */
+export const homeVisitsGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  const sessionService = inject(SessionService);
+
+  return sessionService.homeVisitsEnabled() ? true : router.createUrlTree(['/business/appointments']);
+};

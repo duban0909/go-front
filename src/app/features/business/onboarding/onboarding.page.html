@@ -24,6 +24,9 @@
         <app-onboarding-employees [businessId]="businessId()" (next)="goNext()" (back)="goBack()" />
       }
       @case (6) {
+        <app-onboarding-home-visits [businessId]="businessId()" (next)="goNext()" (back)="goBack()" />
+      }
+      @case (7) {
         <app-onboarding-summary [businessId]="businessId()" (completed)="onOnboardingCompleted()" (back)="goBack()" />
       }
     }

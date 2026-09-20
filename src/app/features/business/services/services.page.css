@@ -278,3 +278,16 @@
     padding: 1.5rem 2rem 2.5rem;
   }
 }
+
+.home-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.4rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--go-teal) 14%, white);
+  color: var(--go-teal);
+  font-size: 0.75rem;
+  font-weight: 700;
+}

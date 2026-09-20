@@ -36,14 +36,18 @@
 
     <label class="reminder-select">
       Avisar
-      <select
-        [ngModel]="reminderHoursBefore()"
-        (ngModelChange)="onReminderChange($event)"
-      >
-        @for (option of reminderOptions; track option) {
-          <option [value]="option">{{ reminderLabel(option) }}</option>
-        }
-      </select>
+      @if (isLoading()) {
+        <span class="skeleton-line skeleton-select" aria-hidden="true"></span>
+      } @else {
+        <select
+          [ngModel]="reminderHoursBefore()"
+          (ngModelChange)="onReminderChange($event)"
+        >
+          @for (option of reminderOptions; track option) {
+            <option [value]="option">{{ reminderLabel(option) }}</option>
+          }
+        </select>
+      }
       antes
     </label>
   </article>

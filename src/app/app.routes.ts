@@ -3,6 +3,7 @@ import {
 	businessInfoGuard,
 	businessOnboardedGuard,
 	businessOnboardingWizardGuard,
+	homeVisitsGuard,
 	onboardingGuard,
 	ownerGuard,
 	sessionGuard,
@@ -16,6 +17,7 @@ import { ChatSessionPageComponent } from './features/business/chat-session/chat-
 import { EmployeeHoursPageComponent } from './features/business/employees/employee-hours/employee-hours.page';
 import { EmployeeServicesPageComponent } from './features/business/employees/employee-services/employee-services.page';
 import { EmployeesListPageComponent } from './features/business/employees/employees-list/employees-list.page';
+import { HomeVisitsPageComponent } from './features/business/home-visits/home-visits.page';
 import { HoursPageComponent } from './features/business/hours/hours.page';
 import { ServicesPageComponent } from './features/business/services/services.page';
 import { SettingsPageComponent } from './features/business/settings/settings.page';
@@ -86,6 +88,11 @@ export const routes: Routes = [
 				path: 'services',
 				canActivate: [businessInfoGuard],
 				component: ServicesPageComponent
+			},
+			{
+				path: 'home-visits',
+				canActivate: [businessInfoGuard, homeVisitsGuard],
+				component: HomeVisitsPageComponent
 			},
 			{
 				path: 'hours',

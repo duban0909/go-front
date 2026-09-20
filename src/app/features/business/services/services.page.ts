@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
@@ -18,6 +18,7 @@ import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
 })
 export class ServicesPageComponent implements OnInit {
   readonly services = signal<ServiceItem[]>([]);
+  readonly homeVisitsEnabled = computed(() => this.sessionService.homeVisitsEnabled());
   readonly skeletonRows = [0, 1, 2];
   readonly isLoading = signal(false);
   readonly error = signal('');
@@ -42,7 +43,8 @@ export class ServicesPageComponent implements OnInit {
     this.form = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required, Validators.pattern(ServicesPageComponent.NOMBRE_SERVICIO_PATTERN)]],
       duration_minutes: [30, [Validators.required, Validators.min(5)]],
-      price: [0, [Validators.required, Validators.min(0)]]
+      price: [0, [Validators.required, Validators.min(0)]],
+      offers_home_visit: [false]
     });
   }
 
@@ -114,7 +116,7 @@ export class ServicesPageComponent implements OnInit {
 
   openCreateModal(): void {
     this.editingService.set(null);
-    this.form.reset({ name: '', duration_minutes: 30, price: 0 });
+    this.form.reset({ name: '', duration_minutes: 30, price: 0, offers_home_visit: false });
     this.isModalOpen.set(true);
   }
 
@@ -123,7 +125,8 @@ export class ServicesPageComponent implements OnInit {
     this.form.reset({
       name: service.name,
       duration_minutes: service.duration_minutes,
-      price: service.price
+      price: service.price,
+      offers_home_visit: service.offers_home_visit ?? false
     });
     this.isModalOpen.set(true);
   }
@@ -140,7 +143,7 @@ export class ServicesPageComponent implements OnInit {
       return;
     }
 
-    const { name, duration_minutes, price } = this.form.getRawValue();
+    const { name, duration_minutes, price, offers_home_visit } = this.form.getRawValue();
     const trimmedName = name.trim();
     this.isSaving.set(true);
 
@@ -148,10 +151,10 @@ export class ServicesPageComponent implements OnInit {
       const editing = this.editingService();
 
       if (editing) {
-        await firstValueFrom(this.apiService.updateService(editing.id, { name: trimmedName, duration_minutes, price }));
+        await firstValueFrom(this.apiService.updateService(editing.id, { name: trimmedName, duration_minutes, price, offers_home_visit }));
       } else {
         await firstValueFrom(
-          this.apiService.createService({ business_id: businessId, name: trimmedName, duration_minutes, price })
+          this.apiService.createService({ business_id: businessId, name: trimmedName, duration_minutes, price, offers_home_visit })
         );
       }
 

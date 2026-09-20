@@ -37,6 +37,7 @@ export type LucideIconName =
   | 'download'
   | 'info'
   | 'search'
+  | 'map-pin'
   | 'x';
 
 type IconElement =
@@ -159,6 +160,13 @@ const LUCIDE_ICONS: Record<LucideIconName, LucideIconData> = {
       path(
         'M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326'
       )
+    ]
+  },
+  'map-pin': {
+    viewBox: '0 0 24 24',
+    elements: [
+      path('M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0'),
+      circle(12, 10, 3)
     ]
   },
   utensils: {

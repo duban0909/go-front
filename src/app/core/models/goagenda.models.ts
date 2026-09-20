@@ -5,6 +5,7 @@ export interface ServiceItem {
   duration_minutes: number;
   price: number;
   active: boolean;
+  offers_home_visit: boolean;
 }
 
 /** Respuesta cruda de GET /services: la lista viene envuelta bajo la clave "services". */
@@ -17,12 +18,14 @@ export interface ServiceCreate {
   name: string;
   duration_minutes?: number;
   price?: number;
+  offers_home_visit?: boolean;
 }
 
 export interface ServiceUpdate {
   name?: string;
   duration_minutes?: number;
   price?: number;
+  offers_home_visit?: boolean;
 }
 
 export interface BusinessSettings {
@@ -40,6 +43,11 @@ export interface BusinessInfoUpdate {
   business_id: string;
   name: string;
   phone_number?: string | null;
+}
+
+export interface HomeVisitsToggle {
+  business_id: string;
+  enabled: boolean;
 }
 
 export interface ReminderConfigUpdate {
@@ -108,6 +116,8 @@ export interface ManualAppointmentInput {
   client_phone: string;
   service_id: string;
   fecha_hora: string;
+  address?: string;
+  zone?: string;
 }
 
 export interface AvailableSlotsParams {
@@ -200,6 +210,7 @@ export interface Employment {
   business_blocked: boolean | null;
   business_onboarding_completed: boolean;
   business_onboarding_step: number;
+  business_home_visits_enabled: boolean;
   name: string | null;
   role: 'owner' | 'staff';
   active: boolean;
@@ -353,4 +364,28 @@ export interface BlockedUpdate {
 /** Respuesta cruda de PUT /admin/businesses/{id}/blocked: el negocio viene envuelto bajo la clave "business". */
 export interface AdminBusinessResponse {
   business: AdminBusiness;
+}
+
+export interface HomeVisitZone {
+  id: string;
+  business_id: string;
+  name: string;
+  fee: number;
+  active: boolean;
+}
+
+export interface HomeVisitZonesResponse {
+  zones: HomeVisitZone[];
+}
+
+export interface HomeVisitZoneCreate {
+  business_id: string;
+  name: string;
+  fee: number;
+}
+
+export interface HomeVisitZoneUpdate {
+  name?: string;
+  fee?: number;
+  active?: boolean;
 }

@@ -6,11 +6,12 @@ import { SessionService } from '../../../core/services/session.service';
 import { BusinessInfoStepComponent } from './steps/business-info-step.component';
 import { EmployeesStepComponent } from './steps/employees-step.component';
 import { FirstServiceStepComponent } from './steps/first-service-step.component';
+import { HomeVisitsStepComponent } from './steps/home-visits-step.component';
 import { HoursStepComponent } from './steps/hours-step.component';
 import { SummaryStepComponent } from './steps/summary-step.component';
 import { WelcomeStepComponent } from './steps/welcome-step.component';
 
-const STEP_COUNT = 6;
+const STEP_COUNT = 7;
 
 @Component({
   selector: 'app-onboarding-page',
@@ -20,6 +21,7 @@ const STEP_COUNT = 6;
     FirstServiceStepComponent,
     HoursStepComponent,
     EmployeesStepComponent,
+    HomeVisitsStepComponent,
     SummaryStepComponent
   ],
   templateUrl: './onboarding.page.html',

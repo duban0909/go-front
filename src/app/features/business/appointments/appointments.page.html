@@ -150,6 +150,41 @@
         </select>
       </label>
 
+      @if (homeVisitsEnabled()) {
+        <label class="home-switch" [class.disabled]="!selectedServiceOffersHomeVisit">
+          <span class="home-switch-text">
+            <strong>Cita a domicilio</strong>
+            <small>
+              {{ selectedServiceOffersHomeVisit ? 'Ingresa la direccion del cliente.' : 'Disponible solo en servicios que se hacen a domicilio.' }}
+            </small>
+          </span>
+          <input type="checkbox" formControlName="is_home_visit" role="switch" [attr.aria-disabled]="!selectedServiceOffersHomeVisit" />
+          <span class="home-switch-track" aria-hidden="true"></span>
+        </label>
+
+        @if (form.controls.is_home_visit.value) {
+          <app-text-field
+            label="Direccion del cliente"
+            placeholder="Calle, numero, barrio y referencias"
+            [showLabel]="true"
+            formControlName="address"
+            [error]="addressError"
+          />
+
+          @if (zones().length > 0) {
+            <label class="field-label">
+              Municipio o zona
+              <select formControlName="zone" class="service-select">
+                <option value="" disabled>Selecciona el municipio</option>
+                @for (zone of zones(); track zone.id) {
+                  <option [value]="zone.name">{{ zone.name }} &middot; recargo {{ zone.fee | copCurrency }}</option>
+                }
+              </select>
+            </label>
+          }
+        }
+      }
+
       <label class="field-label">
         Empleado
         <select formControlName="employee_id" class="service-select">

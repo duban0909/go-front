@@ -43,6 +43,11 @@ import {
   ExcludedChat,
   ExcludedChatCreate,
   FcmTokenUpdate,
+  HomeVisitsToggle,
+  HomeVisitZone,
+  HomeVisitZoneCreate,
+  HomeVisitZonesResponse,
+  HomeVisitZoneUpdate,
   InvitationCode,
   InvitationCodeResponse,
   ManualAppointmentInput,
@@ -169,6 +174,25 @@ export class GoagendaApiService {
     return this.http.delete(`${GOAGENDA_API_URL}/services/${serviceId}`);
   }
 
+  // Politicas de domicilio
+  listHomeVisitZones(businessId: string): Observable<HomeVisitZone[]> {
+    return this.http
+      .get<HomeVisitZonesResponse>(`${GOAGENDA_API_URL}/home-visit-zones`, { params: { business_id: businessId } })
+      .pipe(map((response) => response.zones));
+  }
+
+  createHomeVisitZone(payload: HomeVisitZoneCreate): Observable<unknown> {
+    return this.http.post(`${GOAGENDA_API_URL}/home-visit-zones`, payload);
+  }
+
+  updateHomeVisitZone(zoneId: string, payload: HomeVisitZoneUpdate): Observable<unknown> {
+    return this.http.put(`${GOAGENDA_API_URL}/home-visit-zones/${zoneId}`, payload);
+  }
+
+  deleteHomeVisitZone(zoneId: string): Observable<unknown> {
+    return this.http.delete(`${GOAGENDA_API_URL}/home-visit-zones/${zoneId}`);
+  }
+
   // Configuracion de negocio
   getBusinessSettings(businessId: string): Observable<BusinessSettings> {
     return this.http
@@ -184,6 +208,10 @@ export class GoagendaApiService {
 
   updateReminderConfig(payload: ReminderConfigUpdate): Observable<BusinessSettings> {
     return this.http.put<BusinessSettings>(`${GOAGENDA_API_URL}/business-settings/reminder`, payload);
+  }
+
+  updateHomeVisitsEnabled(payload: HomeVisitsToggle): Observable<unknown> {
+    return this.http.put(`${GOAGENDA_API_URL}/business-settings/home-visits`, payload);
   }
 
   updateFcmToken(payload: FcmTokenUpdate): Observable<unknown> {
@@ -248,6 +276,9 @@ export class GoagendaApiService {
     }
     if (params.status) {
       httpParams = httpParams.set('status', params.status);
+    }
+    if (params.home_visit !== undefined) {
+      httpParams = httpParams.set('home_visit', String(params.home_visit));
     }
     if (params.date_from) {
       httpParams = httpParams.set('date_from', params.date_from);

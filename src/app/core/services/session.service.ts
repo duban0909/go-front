@@ -27,6 +27,8 @@ export class SessionService {
   // Default true: si por algun motivo el campo no llega, nunca se debe
   // bloquear por accidente el panel de un negocio que ya funcionaba.
   readonly onboardingCompleted = computed(() => this.currentEmployment()?.business_onboarding_completed ?? true);
+  // Flag por negocio: con los domicilios desactivados la app se comporta como antes.
+  readonly homeVisitsEnabled = computed(() => this.currentEmployment()?.business_home_visits_enabled ?? false);
   readonly onboardingStep = computed(() => this.currentEmployment()?.business_onboarding_step ?? 1);
 
   get token(): string | null {
@@ -36,6 +38,20 @@ export class SessionService {
   saveAccessToken(token: string): void {
     this.accessToken.set(token);
     localStorage.setItem(ACCESS_TOKEN_KEY, token);
+  }
+
+  /** Refleja el flag de domicilios en la sesion sin volver a pedir /me (evita parpadeos en el panel). */
+  setHomeVisitsEnabled(enabled: boolean): void {
+    this.me.update((me) =>
+      me
+        ? {
+            ...me,
+            employments: me.employments.map((e) =>
+              e.business_id === this.businessId() ? { ...e, business_home_visits_enabled: enabled } : e
+            )
+          }
+        : me
+    );
   }
 
   clearSession(): void {

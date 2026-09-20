@@ -11,6 +11,8 @@ import { UiButtonComponent } from '../../../shared/components/ui-button/ui-butto
 import { UiModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
 import { UiTextFieldComponent } from '../../../shared/components/ui-text-field/ui-text-field.component';
 import { WHATSAPP_PHONE_PATTERN, notBlankValidator } from '../../../shared/utils/form-validators';
+import { HomeVisitZone } from '../../../core/models/goagenda.models';
+import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
 
 @Component({
   selector: 'app-settings-page',
@@ -21,7 +23,8 @@ import { WHATSAPP_PHONE_PATTERN, notBlankValidator } from '../../../shared/utils
     UiButtonComponent,
     UiTextFieldComponent,
     UiModalComponent,
-    ChatLinkQrCardComponent
+    ChatLinkQrCardComponent,
+    CopCurrencyPipe
   ],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.css'
@@ -37,9 +40,19 @@ export class SettingsPageComponent implements OnInit {
   readonly isSavingOwnerName = signal(false);
   readonly ownerNameSuccess = signal('');
   readonly isLinksInfoModalOpen = signal(false);
+  readonly homeVisitsEnabled = computed(() => this.sessionService.homeVisitsEnabled());
+  readonly isTogglingHomeVisits = signal(false);
+  readonly activeTab = signal<'general' | 'chat' | 'domicilios'>('general');
 
   readonly form;
   readonly ownerNameForm;
+  readonly zoneForm;
+  readonly zones = signal<HomeVisitZone[]>([]);
+  readonly isSavingZone = signal(false);
+  readonly zoneError = signal('');
+  readonly editingZoneId = signal<string | null>(null);
+  readonly editZoneForm;
+  readonly isUpdatingZone = signal(false);
 
   readonly businessId = computed(() => this.sessionService.businessId() ?? '');
 
@@ -64,6 +77,14 @@ export class SettingsPageComponent implements OnInit {
     this.form = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required, notBlankValidator]],
       phone_number: ['', [Validators.required, Validators.pattern(WHATSAPP_PHONE_PATTERN)]]
+    });
+    this.zoneForm = this.formBuilder.nonNullable.group({
+      name: ['', [Validators.required, notBlankValidator]],
+      fee: [0, [Validators.required, Validators.min(0)]]
+    });
+    this.editZoneForm = this.formBuilder.nonNullable.group({
+      name: ['', [Validators.required, notBlankValidator]],
+      fee: [0, [Validators.required, Validators.min(0)]]
     });
     this.ownerNameForm = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required]]
@@ -96,7 +117,126 @@ export class SettingsPageComponent implements OnInit {
   ngOnInit(): void {
     void this.loadSettings();
     void this.loadChatConfig();
+    void this.loadZones();
     this.ownerNameForm.reset({ name: this.sessionService.currentEmployment()?.name ?? '' });
+  }
+
+  async loadZones(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId) {
+      return;
+    }
+
+    try {
+      this.zones.set(await firstValueFrom(this.apiService.listHomeVisitZones(businessId)));
+    } catch {
+      this.zoneError.set('No se pudieron cargar las zonas de domicilio.');
+    }
+  }
+
+  async addZone(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (this.zoneForm.invalid || !businessId || this.isSavingZone()) {
+      this.zoneForm.markAllAsTouched();
+      return;
+    }
+
+    const { name, fee } = this.zoneForm.getRawValue();
+    this.isSavingZone.set(true);
+    this.zoneError.set('');
+
+    try {
+      await firstValueFrom(this.apiService.createHomeVisitZone({ business_id: businessId, name: name.trim(), fee }));
+      this.zoneForm.reset({ name: '', fee: 0 });
+      await this.loadZones();
+    } catch (error) {
+      const status = (error as { status?: number }).status;
+      this.zoneError.set(status === 409 ? 'Ya existe una zona con ese nombre.' : 'No se pudo agregar la zona.');
+    } finally {
+      this.isSavingZone.set(false);
+    }
+  }
+
+  async toggleHomeVisits(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId || this.isTogglingHomeVisits()) {
+      return;
+    }
+
+    const enabled = !this.homeVisitsEnabled();
+    this.isTogglingHomeVisits.set(true);
+    this.zoneError.set('');
+
+    try {
+      await firstValueFrom(this.apiService.updateHomeVisitsEnabled({ business_id: businessId, enabled }));
+      this.sessionService.setHomeVisitsEnabled(enabled);
+    } catch {
+      this.zoneError.set('No se pudo cambiar la configuracion de domicilios.');
+    } finally {
+      this.isTogglingHomeVisits.set(false);
+    }
+  }
+
+  startEditZone(zone: HomeVisitZone): void {
+    this.zoneError.set('');
+    this.editZoneForm.reset({ name: zone.name, fee: zone.fee });
+    this.editingZoneId.set(zone.id);
+  }
+
+  cancelEditZone(): void {
+    this.editingZoneId.set(null);
+  }
+
+  async saveEditZone(zone: HomeVisitZone): Promise<void> {
+    if (this.editZoneForm.invalid || this.isUpdatingZone()) {
+      this.editZoneForm.markAllAsTouched();
+      return;
+    }
+
+    const { name, fee } = this.editZoneForm.getRawValue();
+    this.isUpdatingZone.set(true);
+    this.zoneError.set('');
+
+    try {
+      await firstValueFrom(this.apiService.updateHomeVisitZone(zone.id, { name: name.trim(), fee }));
+      this.zones.update((list) => list.map((item) => (item.id === zone.id ? { ...item, name: name.trim(), fee } : item)));
+      this.editingZoneId.set(null);
+    } catch {
+      this.zoneError.set('No se pudo guardar la zona.');
+    } finally {
+      this.isUpdatingZone.set(false);
+    }
+  }
+
+  async toggleZone(zone: HomeVisitZone): Promise<void> {
+    try {
+      await firstValueFrom(this.apiService.updateHomeVisitZone(zone.id, { active: !zone.active }));
+      this.zones.update((list) => list.map((item) => (item.id === zone.id ? { ...item, active: !zone.active } : item)));
+    } catch {
+      this.zoneError.set('No se pudo actualizar la zona.');
+    }
+  }
+
+  async deleteZone(zone: HomeVisitZone): Promise<void> {
+    try {
+      await firstValueFrom(this.apiService.deleteHomeVisitZone(zone.id));
+      this.zones.update((list) => list.filter((item) => item.id !== zone.id));
+    } catch {
+      this.zoneError.set('No se pudo eliminar la zona.');
+    }
+  }
+
+  get zoneNameError(): string | null {
+    const control = this.zoneForm.controls.name;
+    return control.touched && control.invalid ? 'El nombre del municipio o zona es obligatorio.' : null;
+  }
+
+  get zoneFeeError(): string | null {
+    const control = this.zoneForm.controls.fee;
+    return control.touched && control.invalid ? 'El recargo no puede ser negativo.' : null;
   }
 
   async saveOwnerName(): Promise<void> {
