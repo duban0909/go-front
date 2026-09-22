@@ -1,9 +1,10 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { SessionService } from '../../../core/services/session.service';
-import { ServiceItem } from '../../../core/models/goagenda.models';
+import { ServiceItem, ServicePaymentType } from '../../../core/models/goagenda.models';
 import { LucideIconComponent } from '../../../shared/components/lucide-icon/lucide-icon.component';
 import { UiButtonComponent } from '../../../shared/components/ui-button/ui-button.component';
 import { UiModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
@@ -34,6 +35,8 @@ export class ServicesPageComponent implements OnInit {
   private static readonly NOMBRE_SERVICIO_PATTERN = /^[a-zA-Z0-9À-ÿñÑ\s.,'&%/!¡¿()-]+$/;
 
   readonly form;
+  /** Reflejo en signal de los valores del form, para derivar `paymentPreviewAmount` (los FormGroup no son signals). */
+  private readonly formValue;
 
   constructor(
     private readonly formBuilder: FormBuilder,
@@ -44,8 +47,15 @@ export class ServicesPageComponent implements OnInit {
       name: ['', [Validators.required, Validators.pattern(ServicesPageComponent.NOMBRE_SERVICIO_PATTERN)]],
       duration_minutes: [30, [Validators.required, Validators.min(5)]],
       price: [0, [Validators.required, Validators.min(0)]],
-      offers_home_visit: [false]
+      offers_home_visit: [false],
+      requires_payment: [false],
+      payment_type: ['percentage' as ServicePaymentType],
+      payment_percentage: [30, [Validators.min(1), Validators.max(100)]],
+      // En pesos en el formulario (como price); se convierte a centavos al guardar.
+      payment_fixed_amount: [0, [Validators.min(0)]],
+      payment_description: ['Abono requerido para confirmar la cita']
     });
+    this.formValue = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   }
 
   get nameError(): string | null {
@@ -90,6 +100,37 @@ export class ServicesPageComponent implements OnInit {
     return null;
   }
 
+  get paymentPercentageError(): string | null {
+    const control = this.form.controls.payment_percentage;
+    if (!control.touched || this.form.controls.payment_type.value !== 'percentage') {
+      return null;
+    }
+    if (control.hasError('min') || control.hasError('max')) {
+      return 'El porcentaje debe estar entre 1 y 100.';
+    }
+    return null;
+  }
+
+  get paymentFixedAmountError(): string | null {
+    const control = this.form.controls.payment_fixed_amount;
+    if (!control.touched || this.form.controls.payment_type.value !== 'fixed') {
+      return null;
+    }
+    if (control.hasError('min') || control.value <= 0) {
+      return 'El monto del abono debe ser mayor a 0.';
+    }
+    return null;
+  }
+
+  /** Vista previa del monto de abono en pesos, calculado igual que lo hara el backend. */
+  readonly paymentPreviewAmount = computed(() => {
+    const { payment_type, payment_percentage, payment_fixed_amount, price } = this.formValue();
+    if (payment_type === 'percentage') {
+      return Math.round(((price ?? 0) * (payment_percentage ?? 0)) / 100);
+    }
+    return payment_fixed_amount ?? 0;
+  });
+
   ngOnInit(): void {
     void this.loadServices();
   }
@@ -116,7 +157,17 @@ export class ServicesPageComponent implements OnInit {
 
   openCreateModal(): void {
     this.editingService.set(null);
-    this.form.reset({ name: '', duration_minutes: 30, price: 0, offers_home_visit: false });
+    this.form.reset({
+      name: '',
+      duration_minutes: 30,
+      price: 0,
+      offers_home_visit: false,
+      requires_payment: false,
+      payment_type: 'percentage',
+      payment_percentage: 30,
+      payment_fixed_amount: 0,
+      payment_description: 'Abono requerido para confirmar la cita'
+    });
     this.isModalOpen.set(true);
   }
 
@@ -126,7 +177,13 @@ export class ServicesPageComponent implements OnInit {
       name: service.name,
       duration_minutes: service.duration_minutes,
       price: service.price,
-      offers_home_visit: service.offers_home_visit ?? false
+      offers_home_visit: service.offers_home_visit ?? false,
+      requires_payment: service.requires_payment ?? false,
+      payment_type: service.payment_type ?? 'percentage',
+      payment_percentage: service.payment_percentage ?? 30,
+      // El backend guarda centavos; el formulario trabaja en pesos, como price.
+      payment_fixed_amount: service.payment_fixed_amount_cents ? Math.round(service.payment_fixed_amount_cents / 100) : 0,
+      payment_description: service.payment_description ?? 'Abono requerido para confirmar la cita'
     });
     this.isModalOpen.set(true);
   }
@@ -143,19 +200,38 @@ export class ServicesPageComponent implements OnInit {
       return;
     }
 
-    const { name, duration_minutes, price, offers_home_visit } = this.form.getRawValue();
+    const {
+      name,
+      duration_minutes,
+      price,
+      offers_home_visit,
+      requires_payment,
+      payment_type,
+      payment_percentage,
+      payment_fixed_amount,
+      payment_description
+    } = this.form.getRawValue();
     const trimmedName = name.trim();
     this.isSaving.set(true);
 
+    const paymentFields = requires_payment
+      ? {
+          requires_payment: true,
+          payment_type,
+          payment_percentage: payment_type === 'percentage' ? payment_percentage : null,
+          payment_fixed_amount_cents: payment_type === 'fixed' ? Math.round(payment_fixed_amount * 100) : null,
+          payment_description: payment_description?.trim() || 'Abono requerido para confirmar la cita'
+        }
+      : { requires_payment: false };
+
     try {
       const editing = this.editingService();
+      const payload = { name: trimmedName, duration_minutes, price, offers_home_visit, ...paymentFields };
 
       if (editing) {
-        await firstValueFrom(this.apiService.updateService(editing.id, { name: trimmedName, duration_minutes, price, offers_home_visit }));
+        await firstValueFrom(this.apiService.updateService(editing.id, payload));
       } else {
-        await firstValueFrom(
-          this.apiService.createService({ business_id: businessId, name: trimmedName, duration_minutes, price, offers_home_visit })
-        );
+        await firstValueFrom(this.apiService.createService({ business_id: businessId, ...payload }));
       }
 
       this.isModalOpen.set(false);

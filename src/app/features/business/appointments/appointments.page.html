@@ -82,6 +82,7 @@
           <article
             class="appointment-card"
             [class]="'status-' + appointment.status"
+            [class.past]="isPastAppointment(appointment)"
             [class.highlighted]="appointment.id === highlightedAppointmentId()"
             [attr.data-appointment-id]="appointment.id"
           >
@@ -98,6 +99,9 @@
                 <span class="status-badge" [class]="'status-badge-' + appointment.status">
                   {{ statusLabel(appointment.status) }}
                 </span>
+                @if (isPastAppointment(appointment)) {
+                  <span class="past-badge">Ya pasó</span>
+                }
               </div>
 
               @if (!agendaFilter() && employees().length > 1) {

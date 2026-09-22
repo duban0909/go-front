@@ -300,3 +300,173 @@ app-chat-link-qr-card {
   background: var(--go-teal);
   color: #ffffff;
 }
+
+.wompi-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--go-radius-md);
+  background: color-mix(in srgb, var(--go-teal) 8%, white);
+  color: var(--go-teal);
+  margin-bottom: 0.9rem;
+}
+
+.wompi-status-off {
+  background: color-mix(in srgb, #b8860b 10%, white);
+  color: #8a6600;
+}
+
+.wompi-status-title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--go-charcoal);
+}
+
+.wompi-status-detail {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: #5b6472;
+}
+
+.wompi-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.wompi-form-heading {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.payment-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.wompi-webhook-box {
+  margin-top: 0.5rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--go-radius-md);
+  background: var(--go-bg);
+  display: grid;
+  gap: 0.4rem;
+}
+
+.wompi-webhook-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--go-charcoal);
+}
+
+.wompi-webhook-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  border-radius: var(--go-radius-sm);
+  padding: 0.5rem 0.6rem;
+}
+
+.wompi-webhook-row code {
+  flex: 1;
+  overflow-x: auto;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: #5b6472;
+}
+
+.wompi-webhook-copied {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--go-teal);
+}
+
+.icon-btn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--go-teal);
+}
+
+.icon-btn:hover {
+  background: color-mix(in srgb, var(--go-teal) 10%, white);
+}
+
+.payment-request-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.payment-request-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--go-radius-md);
+  background: var(--go-bg);
+}
+
+.payment-request-info {
+  flex: 1;
+  min-width: 10rem;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.payment-request-meta {
+  font-size: 0.78rem;
+  color: #5b6472;
+}
+
+.pending-note {
+  display: block;
+  color: #8a6600;
+}
+
+.payment-status-badge {
+  flex: none;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: color-mix(in srgb, #b8860b 16%, white);
+  color: #8a6600;
+}
+
+.payment-status-badge.paid {
+  background: color-mix(in srgb, var(--go-teal) 16%, white);
+  color: var(--go-teal);
+}
+
+.payment-status-badge.expired {
+  background: color-mix(in srgb, #6b7280 16%, white);
+  color: #4b5563;
+}
+
+.payment-request-actions {
+  flex: none;
+  display: flex;
+  gap: 0.4rem;
+}

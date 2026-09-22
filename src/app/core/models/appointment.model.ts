@@ -1,4 +1,5 @@
-export type AppointmentStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+/** 'pending_payment': cita con abono generada por el chat, esperando que Wompi confirme el pago (bloquea el cupo igual que 'confirmed'). */
+export type AppointmentStatus = 'pending' | 'pending_payment' | 'confirmed' | 'completed' | 'cancelled';
 
 export interface AppointmentRecord {
   id: string;

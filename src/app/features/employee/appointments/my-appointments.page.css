@@ -153,7 +153,8 @@
   padding: 1rem 1.1rem;
 }
 
-.appointment-card.status-pending {
+.appointment-card.status-pending,
+.appointment-card.status-pending_payment {
   border-left-color: #d99a1f;
 }
 
@@ -163,6 +164,28 @@
 
 .appointment-card.status-completed {
   border-left-color: var(--go-navy);
+}
+
+/* Cita cuya hora ya paso: se atenua su CONTENIDO (icono + texto) para
+   distinguirla de un vistazo de las que todavia estan por venir - la tarjeta
+   en si sigue con fondo blanco solido (opacity en el contenedor mezclaba el
+   blanco con el fondo de la pagina, que usa el mismo tono claro, y la
+   tarjeta se volvia invisible). El borde izquierdo sigue indicando el
+   estado real (confirmada, pago pendiente, cancelada) a color completo. */
+.appointment-card.past > * {
+  opacity: 0.55;
+}
+
+.past-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--go-dark) 12%, white);
+  color: color-mix(in srgb, var(--go-dark) 60%, white);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .appointment-icon {
@@ -221,7 +244,8 @@
   white-space: nowrap;
 }
 
-.status-badge-pending {
+.status-badge-pending,
+.status-badge-pending_payment {
   background: color-mix(in srgb, #d99a1f 16%, white);
   color: #a06c0f;
 }

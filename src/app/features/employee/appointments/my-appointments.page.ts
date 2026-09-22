@@ -25,10 +25,12 @@ interface AppointmentView {
   time: string;
   status: AppointmentStatus;
   dateKey: string;
+  scheduledAt: Date;
 }
 
 const STATUS_LABELS: Record<AppointmentStatus, string> = {
   pending: 'Pendiente',
+  pending_payment: 'Pago pendiente',
   confirmed: 'Confirmada',
   completed: 'Completada',
   cancelled: 'Cancelada'
@@ -108,7 +110,8 @@ export class MyAppointmentsPageComponent implements OnInit {
             price: record.services?.price ?? 0,
             time: formatTime12h(scheduledAt),
             status: record.status,
-            dateKey: toDateKey(scheduledAt)
+            dateKey: toDateKey(scheduledAt),
+            scheduledAt
           };
 
           return view;
@@ -123,6 +126,11 @@ export class MyAppointmentsPageComponent implements OnInit {
 
   statusLabel(status: AppointmentStatus): string {
     return STATUS_LABELS[status];
+  }
+
+  /** Ya paso la hora de esta cita - se pinta atenuada en el calendario. */
+  isPastAppointment(appointment: AppointmentView): boolean {
+    return appointment.scheduledAt.getTime() < Date.now();
   }
 
   weekdayLabel(date: Date): string {

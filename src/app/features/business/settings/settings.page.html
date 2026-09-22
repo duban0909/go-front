@@ -12,6 +12,7 @@
     <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'general'" [attr.aria-selected]="activeTab() === 'general'" (click)="activeTab.set('general')">General</button>
     <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'chat'" [attr.aria-selected]="activeTab() === 'chat'" (click)="activeTab.set('chat')">Chat</button>
     <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'domicilios'" [attr.aria-selected]="activeTab() === 'domicilios'" (click)="activeTab.set('domicilios')">Domicilios</button>
+    <button type="button" role="tab" class="tab" [class.active]="activeTab() === 'pagos'" [attr.aria-selected]="activeTab() === 'pagos'" (click)="activeTab.set('pagos')">Pagos</button>
   </div>
 
   @switch (activeTab()) {
@@ -230,6 +231,192 @@
       </form>
     </article>
       }
+    }
+    @case ('pagos') {
+      <article class="card">
+        <h2>
+          <span class="card-icon">
+            <app-lucide-icon name="credit-card" [size]="20" [strokeWidth]="1.9" />
+          </span>
+          Pasarela de pago (Wompi)
+        </h2>
+        <p class="hint-text">
+          Conecta tu cuenta de Wompi para que el chat pueda pedir abonos al agendar los servicios que lo requieran.
+          Configura primero tus llaves de <strong>Sandbox</strong> para hacer pruebas antes de pasar a Producción.
+        </p>
+
+        <div class="wompi-webhook-box">
+          <p class="wompi-webhook-label">
+            <app-lucide-icon name="info" [size]="15" [strokeWidth]="2" />
+            Paso 1: copia esta URL de eventos y pégala en tu cuenta de Wompi
+          </p>
+          <div class="wompi-webhook-row">
+            <code>{{ wompiWebhookUrl() }}</code>
+            <button type="button" class="icon-btn" (click)="copyWebhookUrl()" aria-label="Copiar URL de eventos">
+              <app-lucide-icon [name]="webhookUrlCopied() ? 'circle-check-big' : 'copy'" [size]="16" [strokeWidth]="2" />
+            </button>
+          </div>
+          @if (webhookUrlCopied()) {
+            <p class="wompi-webhook-copied">¡Copiada!</p>
+          }
+          <p class="hint-text">
+            En <a href="https://comercios.wompi.co" target="_blank" rel="noopener noreferrer">comercios.wompi.co</a>:
+            Mi cuenta → Configuración de eventos → pega esta URL (una vez para Sandbox y otra para Producción, según
+            el ambiente que vayas a usar). Sin esto, la cita se agenda igual pero el chat nunca se enterará cuando el
+            cliente pague.
+          </p>
+        </div>
+
+        @if (wompiError()) {
+          <p class="error-banner" role="alert">{{ wompiError() }}</p>
+        }
+
+        @if (isLoadingWompi()) {
+          <p class="hint-text">Cargando...</p>
+        } @else {
+          @if (wompiStatus(); as status) {
+            <div class="wompi-status" [class.wompi-status-off]="!status.is_configured">
+              <app-lucide-icon [name]="status.is_configured ? 'circle-check-big' : 'info'" [size]="18" [strokeWidth]="2" />
+              <div>
+                <p class="wompi-status-title">
+                  {{ status.sandbox_mode ? 'Configurado en Sandbox (pruebas)' : 'Configurado en Producción' }}
+                </p>
+                @if (status.test_result) {
+                  <p class="wompi-status-detail">
+                    Última prueba: {{ status.test_result }}
+                    @if (status.last_tested_at) {
+                      ({{ status.last_tested_at | date: 'short' }})
+                    }
+                  </p>
+                } @else {
+                  <p class="wompi-status-detail">Aún no se ha probado la conexión con Wompi.</p>
+                }
+              </div>
+            </div>
+
+            <div class="wompi-actions">
+              <app-button type="button" variant="ghost" [loading]="isValidatingWompi()" (click)="validateWompiCredentials()">
+                {{ isValidatingWompi() ? 'Probando...' : 'Probar conexión' }}
+              </app-button>
+              <app-button type="button" variant="ghost" [loading]="isDeletingWompi()" (click)="deleteWompiCredentials()">
+                {{ isDeletingWompi() ? 'Eliminando...' : 'Eliminar configuración' }}
+              </app-button>
+            </div>
+          }
+
+          <form [formGroup]="wompiForm" (ngSubmit)="saveWompiCredentials()" class="settings-form wompi-form">
+            <p class="wompi-form-heading">
+              {{ wompiStatus() ? 'Reemplazar credenciales' : 'Paso 2: pega tus llaves de Wompi' }}
+            </p>
+
+            <label class="payment-type-option">
+              <input type="checkbox" formControlName="sandbox_mode" />
+              Ambiente de pruebas (Sandbox) — desmarca solo cuando ya probaste y vas a cobrar de verdad
+            </label>
+
+            <app-text-field
+              label="Llave pública"
+              placeholder="pub_test_..."
+              [showLabel]="true"
+              formControlName="public_key"
+            />
+            <app-text-field
+              label="Llave privada"
+              type="password"
+              placeholder="prv_test_..."
+              [showLabel]="true"
+              formControlName="private_key"
+            />
+            <app-text-field
+              label="Secreto de eventos"
+              type="password"
+              placeholder="test_events_..."
+              [showLabel]="true"
+              formControlName="events_key"
+            />
+            <p class="hint-text">
+              Encuentra estas llaves en tu cuenta de
+              <a href="https://comercios.wompi.co" target="_blank" rel="noopener noreferrer">comercios.wompi.co</a>,
+              en Configuración → Llaves de API. Se guardan encriptadas y nunca se vuelven a mostrar.
+            </p>
+
+            <app-button type="submit" [loading]="isSavingWompi()">
+              {{ isSavingWompi() ? 'Guardando...' : 'Guardar credenciales' }}
+            </app-button>
+          </form>
+        }
+      </article>
+
+      <article class="card">
+        <h2>
+          <span class="card-icon">
+            <app-lucide-icon name="clipboard-list" [size]="20" [strokeWidth]="1.9" />
+          </span>
+          Historial de abonos
+        </h2>
+        <p class="hint-text">Solicitudes de pago que el chat le envió a tus clientes al agendar servicios con abono.</p>
+
+        @if (paymentRequestsError()) {
+          <p class="error-banner" role="alert">{{ paymentRequestsError() }}</p>
+        }
+
+        @if (isLoadingPaymentRequests()) {
+          <p class="hint-text">Cargando...</p>
+        } @else {
+          <ul class="payment-request-list">
+            @for (req of paymentRequests(); track req.id) {
+              <li class="payment-request-item">
+                <div class="payment-request-info">
+                  <strong>{{ req.services?.name ?? req.description ?? 'Abono' }}</strong>
+                  <span class="payment-request-meta">
+                    {{ req.amount_in_cents / 100 | copCurrency }} · {{ req.created_at | date: 'short' }}
+                    @if (req.client_phone) {
+                      · {{ req.client_phone }}
+                    }
+                  </span>
+                  @if (req.status === 'pending' && req.pending_appointment) {
+                    <span class="payment-request-meta pending-note">
+                      Cita para {{ req.pending_appointment.scheduled_at | date: 'short' }} — se agenda al confirmarse el pago
+                    </span>
+                  }
+                </div>
+
+                <span
+                  class="payment-status-badge"
+                  [class.paid]="req.status === 'paid'"
+                  [class.expired]="req.status === 'expired' || req.status === 'cancelled'"
+                >
+                  {{
+                    req.status === 'paid'
+                      ? 'Pagado'
+                      : req.status === 'expired'
+                        ? 'Expirado'
+                        : req.status === 'cancelled'
+                          ? 'Cancelado'
+                          : 'Pendiente'
+                  }}
+                </span>
+
+                @if (req.status === 'pending') {
+                  <div class="payment-request-actions">
+                    <a [href]="req.checkout_url" target="_blank" rel="noopener noreferrer" class="zone-btn">Ver link</a>
+                    <button
+                      type="button"
+                      class="zone-btn"
+                      [disabled]="checkingRequestId() === req.id"
+                      (click)="checkPaymentRequest(req)"
+                    >
+                      {{ checkingRequestId() === req.id ? 'Verificando...' : 'Verificar' }}
+                    </button>
+                  </div>
+                }
+              </li>
+            } @empty {
+              <li class="zone-empty">Todavía no se ha solicitado ningún abono.</li>
+            }
+          </ul>
+        }
+      </article>
     }
   }
 

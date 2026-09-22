@@ -38,6 +38,7 @@ export type LucideIconName =
   | 'info'
   | 'search'
   | 'map-pin'
+  | 'credit-card'
   | 'x';
 
 type IconElement =
@@ -310,6 +311,10 @@ const LUCIDE_ICONS: Record<LucideIconName, LucideIconData> = {
   search: {
     viewBox: '0 0 24 24',
     elements: [circle(11, 11, 8), path('m21 21-4.3-4.3')]
+  },
+  'credit-card': {
+    viewBox: '0 0 24 24',
+    elements: [rect(2, 5, 20, 14, 2, 2), path('M2 10h20')]
   },
   x: { viewBox: '0 0 24 24', elements: [path('M18 6 6 18'), path('m6 6 12 12')] }
 };

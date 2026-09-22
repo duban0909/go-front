@@ -48,6 +48,12 @@ import {
   HomeVisitZoneCreate,
   HomeVisitZonesResponse,
   HomeVisitZoneUpdate,
+  WompiCredentialsInput,
+  WompiCredentialsStatus,
+  WompiPaymentRequest,
+  WompiPaymentRequestCheckResponse,
+  WompiPaymentRequestsResponse,
+  WompiValidateResponse,
   InvitationCode,
   InvitationCodeResponse,
   ManualAppointmentInput,
@@ -362,5 +368,43 @@ export class GoagendaApiService {
   // Tarjeta QR para imprimir
   generateQrCard(payload: QrCardInput): Observable<Blob> {
     return this.http.post(`${GOAGENDA_API_URL}/qr-card`, payload, { responseType: 'blob' });
+  }
+
+  // Pasarela de pago (Wompi) - credenciales por negocio, nunca expuestas completas
+  getWompiSettings(businessId: string): Observable<WompiCredentialsStatus> {
+    return this.http.get<WompiCredentialsStatus>(`${GOAGENDA_API_URL}/business-settings/wompi`, {
+      params: { business_id: businessId }
+    });
+  }
+
+  saveWompiSettings(payload: WompiCredentialsInput): Observable<unknown> {
+    return this.http.put(`${GOAGENDA_API_URL}/business-settings/wompi`, payload);
+  }
+
+  validateWompiSettings(businessId: string): Observable<WompiValidateResponse> {
+    return this.http.post<WompiValidateResponse>(`${GOAGENDA_API_URL}/business-settings/wompi/validate`, {
+      business_id: businessId
+    });
+  }
+
+  deleteWompiSettings(businessId: string): Observable<unknown> {
+    return this.http.delete(`${GOAGENDA_API_URL}/business-settings/wompi`, { params: { business_id: businessId } });
+  }
+
+  // Historial de solicitudes de abono (Wompi)
+  listWompiPaymentRequests(businessId: string, limit = 20): Observable<WompiPaymentRequest[]> {
+    return this.http
+      .get<WompiPaymentRequestsResponse>(`${GOAGENDA_API_URL}/wompi/payment-requests`, {
+        params: { business_id: businessId, limit }
+      })
+      .pipe(map((response) => response.payment_requests));
+  }
+
+  checkWompiPaymentRequest(businessId: string, requestId: string): Observable<WompiPaymentRequestCheckResponse> {
+    return this.http.post<WompiPaymentRequestCheckResponse>(
+      `${GOAGENDA_API_URL}/wompi/payment-requests/${requestId}/check`,
+      {},
+      { params: { business_id: businessId } }
+    );
   }
 }

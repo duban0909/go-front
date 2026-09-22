@@ -56,7 +56,7 @@
     } @else {
       <div class="appointment-list">
         @for (appointment of appointmentsForSelectedDay(); track appointment.id) {
-          <article class="appointment-card" [class]="'status-' + appointment.status">
+          <article class="appointment-card" [class]="'status-' + appointment.status" [class.past]="isPastAppointment(appointment)">
             <span class="appointment-icon">
               <app-lucide-icon name="clock" [size]="20" [strokeWidth]="1.9" />
             </span>
@@ -70,6 +70,9 @@
                 <span class="status-badge" [class]="'status-badge-' + appointment.status">
                   {{ statusLabel(appointment.status) }}
                 </span>
+                @if (isPastAppointment(appointment)) {
+                  <span class="past-badge">Ya pasó</span>
+                }
               </div>
 
               <div class="appointment-bottom">

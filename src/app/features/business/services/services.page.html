@@ -68,6 +68,12 @@
                 A domicilio
               </span>
             }
+            @if (service.requires_payment) {
+              <span class="home-badge payment-badge">
+                <app-lucide-icon name="credit-card" [size]="13" [strokeWidth]="2.2" />
+                Requiere abono
+              </span>
+            }
             <span class="status-badge" [class.inactive]="!service.active">
               <app-lucide-icon name="circle-check-big" [size]="14" [strokeWidth]="2.2" />
               {{ service.active ? 'Activo' : 'Inactivo' }}
@@ -141,6 +147,66 @@
           <input type="checkbox" formControlName="offers_home_visit" role="switch" />
           <span class="home-switch-track" aria-hidden="true"></span>
         </label>
+      }
+
+      <label class="home-switch">
+        <span class="home-switch-text">
+          <strong>Solicitar abono para confirmar la cita</strong>
+          <small>Al agendar este servicio, el chat le enviara al cliente un link de pago de Wompi.</small>
+        </span>
+        <input type="checkbox" formControlName="requires_payment" role="switch" />
+        <span class="home-switch-track" aria-hidden="true"></span>
+      </label>
+
+      @if (form.controls.requires_payment.value) {
+        <div class="payment-config">
+          <div class="payment-type-options" role="radiogroup" aria-label="Tipo de abono">
+            <label class="payment-type-option">
+              <input type="radio" formControlName="payment_type" value="percentage" />
+              Porcentaje del precio
+            </label>
+            <label class="payment-type-option">
+              <input type="radio" formControlName="payment_type" value="fixed" />
+              Monto fijo
+            </label>
+          </div>
+
+          @if (form.controls.payment_type.value === 'percentage') {
+            <app-text-field
+              label="Porcentaje de abono (%)"
+              type="number"
+              placeholder="30"
+              [min]="1"
+              [showLabel]="true"
+              formControlName="payment_percentage"
+              [error]="paymentPercentageError"
+            />
+          } @else {
+            <app-text-field
+              label="Monto del abono"
+              type="number"
+              placeholder="15000"
+              [min]="0"
+              [showLabel]="true"
+              formControlName="payment_fixed_amount"
+              [error]="paymentFixedAmountError"
+            />
+          }
+
+          <app-text-field
+            label="Mensaje para el cliente"
+            placeholder="Abono requerido para confirmar la cita"
+            [showLabel]="true"
+            formControlName="payment_description"
+          />
+
+          <p class="payment-preview">
+            El bot pedira un abono de <strong>{{ paymentPreviewAmount() | copCurrency }}</strong>
+            @if (form.controls.payment_type.value === 'percentage') {
+              ({{ form.controls.payment_percentage.value }}% de {{ form.controls.price.value | copCurrency }})
+            }
+          </p>
+        </div>
       }
 
       <app-button type="submit" [loading]="isSaving()">

@@ -1,7 +1,9 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { GOAGENDA_API_URL } from '../../../core/config/goagenda-api.config';
 import { GoagendaApiService } from '../../../core/services/goagenda-api.service';
 import { SessionService } from '../../../core/services/session.service';
 import { SupabaseAuthService } from '../../../core/services/supabase-auth.service';
@@ -11,7 +13,7 @@ import { UiButtonComponent } from '../../../shared/components/ui-button/ui-butto
 import { UiModalComponent } from '../../../shared/components/ui-modal/ui-modal.component';
 import { UiTextFieldComponent } from '../../../shared/components/ui-text-field/ui-text-field.component';
 import { WHATSAPP_PHONE_PATTERN, notBlankValidator } from '../../../shared/utils/form-validators';
-import { HomeVisitZone } from '../../../core/models/goagenda.models';
+import { HomeVisitZone, WompiCredentialsStatus, WompiPaymentRequest } from '../../../core/models/goagenda.models';
 import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
 
 @Component({
@@ -24,7 +26,8 @@ import { CopCurrencyPipe } from '../../../shared/pipes/cop-currency.pipe';
     UiTextFieldComponent,
     UiModalComponent,
     ChatLinkQrCardComponent,
-    CopCurrencyPipe
+    CopCurrencyPipe,
+    DatePipe
   ],
   templateUrl: './settings.page.html',
   styleUrl: './settings.page.css'
@@ -42,7 +45,23 @@ export class SettingsPageComponent implements OnInit {
   readonly isLinksInfoModalOpen = signal(false);
   readonly homeVisitsEnabled = computed(() => this.sessionService.homeVisitsEnabled());
   readonly isTogglingHomeVisits = signal(false);
-  readonly activeTab = signal<'general' | 'chat' | 'domicilios'>('general');
+  readonly activeTab = signal<'general' | 'chat' | 'domicilios' | 'pagos'>('general');
+
+  // Pasarela de pago (Wompi)
+  readonly wompiStatus = signal<WompiCredentialsStatus | null>(null);
+  readonly isLoadingWompi = signal(false);
+  readonly isSavingWompi = signal(false);
+  readonly isValidatingWompi = signal(false);
+  readonly isDeletingWompi = signal(false);
+  readonly wompiError = signal('');
+  readonly webhookUrlCopied = signal(false);
+  readonly wompiForm;
+
+  // Historial de solicitudes de abono
+  readonly paymentRequests = signal<WompiPaymentRequest[]>([]);
+  readonly isLoadingPaymentRequests = signal(false);
+  readonly checkingRequestId = signal<string | null>(null);
+  readonly paymentRequestsError = signal('');
 
   readonly form;
   readonly ownerNameForm;
@@ -55,6 +74,9 @@ export class SettingsPageComponent implements OnInit {
   readonly isUpdatingZone = signal(false);
 
   readonly businessId = computed(() => this.sessionService.businessId() ?? '');
+
+  /** URL que el dueño debe pegar en su Dashboard de Wompi (Configuracion > Eventos) para recibir confirmaciones de pago. */
+  readonly wompiWebhookUrl = computed(() => `${GOAGENDA_API_URL}/wompi/webhooks/${this.businessId()}`);
 
   readonly chatLink = computed(() => {
     const businessId = this.sessionService.businessId();
@@ -89,6 +111,12 @@ export class SettingsPageComponent implements OnInit {
     this.ownerNameForm = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required]]
     });
+    this.wompiForm = this.formBuilder.nonNullable.group({
+      sandbox_mode: [true],
+      public_key: ['', [Validators.required, Validators.minLength(10)]],
+      private_key: ['', [Validators.required, Validators.minLength(10)]],
+      events_key: ['', [Validators.required, Validators.minLength(10)]]
+    });
   }
 
   get nameError(): string | null {
@@ -118,6 +146,8 @@ export class SettingsPageComponent implements OnInit {
     void this.loadSettings();
     void this.loadChatConfig();
     void this.loadZones();
+    void this.loadWompiSettings();
+    void this.loadPaymentRequests();
     this.ownerNameForm.reset({ name: this.sessionService.currentEmployment()?.name ?? '' });
   }
 
@@ -320,6 +350,156 @@ export class SettingsPageComponent implements OnInit {
       this.error.set('No se pudieron guardar los cambios.');
     } finally {
       this.isSaving.set(false);
+    }
+  }
+
+  async copyWebhookUrl(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.wompiWebhookUrl());
+      this.webhookUrlCopied.set(true);
+      setTimeout(() => this.webhookUrlCopied.set(false), 2000);
+    } catch {
+      // El navegador puede bloquear el portapapeles sin interaccion previa; se ignora en silencio.
+    }
+  }
+
+  async loadWompiSettings(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId) {
+      return;
+    }
+
+    this.isLoadingWompi.set(true);
+    this.wompiError.set('');
+
+    try {
+      const status = await firstValueFrom(this.apiService.getWompiSettings(businessId));
+      this.wompiStatus.set(status.configured ? status : null);
+      this.wompiForm.patchValue({ sandbox_mode: status.sandbox_mode ?? true });
+    } catch {
+      this.wompiError.set('No se pudo cargar la configuracion de la pasarela de pago.');
+    } finally {
+      this.isLoadingWompi.set(false);
+    }
+  }
+
+  async saveWompiCredentials(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (this.wompiForm.invalid || !businessId || this.isSavingWompi()) {
+      this.wompiForm.markAllAsTouched();
+      return;
+    }
+
+    const { sandbox_mode, public_key, private_key, events_key } = this.wompiForm.getRawValue();
+    this.isSavingWompi.set(true);
+    this.wompiError.set('');
+
+    try {
+      await firstValueFrom(
+        this.apiService.saveWompiSettings({
+          business_id: businessId,
+          sandbox_mode,
+          public_key: public_key.trim(),
+          private_key: private_key.trim(),
+          events_key: events_key.trim()
+        })
+      );
+      // Las llaves no se vuelven a mostrar (el backend nunca las expone): se limpia el
+      // formulario y se recarga solo el estado (configurado/ambiente/ultima validacion).
+      this.wompiForm.reset({ sandbox_mode, public_key: '', private_key: '', events_key: '' });
+      await this.loadWompiSettings();
+    } catch {
+      this.wompiError.set('No se pudieron guardar las credenciales de Wompi. Verifica los datos e intenta de nuevo.');
+    } finally {
+      this.isSavingWompi.set(false);
+    }
+  }
+
+  async validateWompiCredentials(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId || this.isValidatingWompi()) {
+      return;
+    }
+
+    this.isValidatingWompi.set(true);
+    this.wompiError.set('');
+
+    try {
+      await firstValueFrom(this.apiService.validateWompiSettings(businessId));
+      await this.loadWompiSettings();
+    } catch (error) {
+      const detail = (error as { error?: { detail?: string } }).error?.detail;
+      this.wompiError.set(detail || 'Las credenciales no son validas.');
+      await this.loadWompiSettings();
+    } finally {
+      this.isValidatingWompi.set(false);
+    }
+  }
+
+  async deleteWompiCredentials(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId || this.isDeletingWompi()) {
+      return;
+    }
+
+    if (!confirm('¿Eliminar la configuracion de Wompi? El chat dejara de poder pedir abonos hasta que la vuelvas a configurar.')) {
+      return;
+    }
+
+    this.isDeletingWompi.set(true);
+    this.wompiError.set('');
+
+    try {
+      await firstValueFrom(this.apiService.deleteWompiSettings(businessId));
+      this.wompiStatus.set(null);
+      this.wompiForm.reset({ sandbox_mode: true, public_key: '', private_key: '', events_key: '' });
+    } catch {
+      this.wompiError.set('No se pudo eliminar la configuracion de Wompi.');
+    } finally {
+      this.isDeletingWompi.set(false);
+    }
+  }
+
+  async loadPaymentRequests(): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId) {
+      return;
+    }
+
+    this.isLoadingPaymentRequests.set(true);
+    this.paymentRequestsError.set('');
+
+    try {
+      this.paymentRequests.set(await firstValueFrom(this.apiService.listWompiPaymentRequests(businessId, 20)));
+    } catch {
+      this.paymentRequestsError.set('No se pudo cargar el historial de abonos.');
+    } finally {
+      this.isLoadingPaymentRequests.set(false);
+    }
+  }
+
+  async checkPaymentRequest(request: WompiPaymentRequest): Promise<void> {
+    const businessId = this.sessionService.businessId();
+
+    if (!businessId || this.checkingRequestId()) {
+      return;
+    }
+
+    this.checkingRequestId.set(request.id);
+    this.paymentRequestsError.set('');
+
+    try {
+      const result = await firstValueFrom(this.apiService.checkWompiPaymentRequest(businessId, request.id));
+      this.paymentRequests.update((list) => list.map((item) => (item.id === request.id ? result.solicitud : item)));
+    } catch {
+      this.paymentRequestsError.set('No se pudo verificar el estado del pago.');
+    } finally {
+      this.checkingRequestId.set(null);
     }
   }
 

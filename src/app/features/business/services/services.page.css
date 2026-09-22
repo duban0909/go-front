@@ -291,3 +291,36 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
+
+.payment-badge {
+  background: color-mix(in srgb, #b8860b 14%, white);
+  color: #8a6600;
+}
+
+.payment-config {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.9rem;
+  border-radius: var(--go-radius-md);
+  background: color-mix(in srgb, var(--go-teal) 5%, white);
+}
+
+.payment-type-options {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.payment-type-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.payment-preview {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #5b6472;
+}

@@ -1,3 +1,6 @@
+/** 'percentage' calcula el abono como % del precio; 'fixed' usa un monto exacto en pesos. */
+export type ServicePaymentType = 'percentage' | 'fixed';
+
 export interface ServiceItem {
   id: string;
   business_id: string;
@@ -6,6 +9,12 @@ export interface ServiceItem {
   price: number;
   active: boolean;
   offers_home_visit: boolean;
+  requires_payment: boolean;
+  payment_type: ServicePaymentType | null;
+  payment_percentage: number | null;
+  /** Monto fijo del abono, en CENTAVOS (igual que amount_in_cents de Wompi). */
+  payment_fixed_amount_cents: number | null;
+  payment_description: string | null;
 }
 
 /** Respuesta cruda de GET /services: la lista viene envuelta bajo la clave "services". */
@@ -13,7 +22,15 @@ export interface ServicesListResponse {
   services: ServiceItem[];
 }
 
-export interface ServiceCreate {
+export interface ServicePaymentFields {
+  requires_payment?: boolean;
+  payment_type?: ServicePaymentType | null;
+  payment_percentage?: number | null;
+  payment_fixed_amount_cents?: number | null;
+  payment_description?: string | null;
+}
+
+export interface ServiceCreate extends ServicePaymentFields {
   business_id: string;
   name: string;
   duration_minutes?: number;
@@ -21,7 +38,7 @@ export interface ServiceCreate {
   offers_home_visit?: boolean;
 }
 
-export interface ServiceUpdate {
+export interface ServiceUpdate extends ServicePaymentFields {
   name?: string;
   duration_minutes?: number;
   price?: number;
@@ -388,4 +405,78 @@ export interface HomeVisitZoneUpdate {
   name?: string;
   fee?: number;
   active?: boolean;
+}
+
+/**
+ * Estado de la configuracion de Wompi de un negocio. Nunca incluye las
+ * llaves en si (ni siquiera parcialmente): el backend solo expone si esta
+ * configurado, en que ambiente, y el resultado de la ultima validacion.
+ */
+export interface WompiCredentialsStatus {
+  configured: boolean;
+  id?: string;
+  sandbox_mode?: boolean;
+  is_configured?: boolean;
+  merchant_id?: string | null;
+  last_tested_at?: string | null;
+  test_result?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface WompiCredentialsInput {
+  business_id: string;
+  public_key: string;
+  private_key: string;
+  events_key: string;
+  sandbox_mode: boolean;
+}
+
+export interface WompiValidateResponse {
+  valid: boolean;
+  message: string;
+}
+
+export type WompiPaymentRequestStatus = 'pending' | 'paid' | 'expired' | 'cancelled';
+
+/**
+ * Datos de la cita que se agendara automaticamente cuando se confirme el
+ * pago (servicios con abono: la cita no existe todavia mientras
+ * status='pending'). Null una vez appointment_id ya esta lleno.
+ */
+export interface WompiPendingAppointment {
+  client_name: string;
+  service_name: string;
+  scheduled_at: string;
+}
+
+/** Una solicitud de abono generada por el bot al agendar un servicio que lo requiere. */
+export interface WompiPaymentRequest {
+  id: string;
+  business_id: string;
+  service_id: string | null;
+  appointment_id: string | null;
+  pending_appointment: WompiPendingAppointment | null;
+  session_id: string | null;
+  client_phone: string | null;
+  amount_in_cents: number;
+  description: string | null;
+  status: WompiPaymentRequestStatus;
+  checkout_url: string;
+  wompi_transaction_id: string | null;
+  wompi_transaction_status: string | null;
+  expires_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+  /** Viene del join a services(name) que hace el backend; null si el servicio ya no existe. */
+  services: { name: string } | null;
+}
+
+export interface WompiPaymentRequestsResponse {
+  payment_requests: WompiPaymentRequest[];
+}
+
+export interface WompiPaymentRequestCheckResponse {
+  solicitud: WompiPaymentRequest;
+  mensaje: string;
 }
