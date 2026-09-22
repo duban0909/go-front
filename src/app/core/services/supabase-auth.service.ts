@@ -69,4 +69,24 @@ export class SupabaseAuthService {
     await this.client.auth.signOut();
     this.sessionService.clearSession();
   }
+
+  /**
+   * Devuelve un access_token valido, refrescandolo contra Supabase si el
+   * guardado esta vencido (getSession() lo hace sola con el refresh_token si
+   * hace falta). Se usa cuando el backend responde 401 con el token actual:
+   * eso puede ser solo que el access_token expiro justo en ese instante
+   * (pasa cada ~1h de uso, es normal) y no que la sesion este realmente
+   * muerta. Devuelve null solo si el refresh_token tambien ya no es valido
+   * (vencido o revocado) - ahi si hay que cerrar sesion de verdad.
+   */
+  async getFreshAccessToken(): Promise<string | null> {
+    const { data, error } = await this.client.auth.getSession();
+
+    if (error || !data.session?.access_token) {
+      return null;
+    }
+
+    this.sessionService.saveAccessToken(data.session.access_token);
+    return data.session.access_token;
+  }
 }

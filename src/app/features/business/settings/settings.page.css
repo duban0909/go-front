@@ -240,6 +240,10 @@ app-chat-link-qr-card {
   font-size: 0.82rem;
 }
 
+.zone-aliases {
+  font-style: italic;
+}
+
 .zone-btn {
   border: 0;
   border-radius: 999px;
@@ -301,73 +305,84 @@ app-chat-link-qr-card {
   color: #ffffff;
 }
 
-.wompi-status {
+.wompi-status-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.7rem;
-  padding: 0.8rem 0.9rem;
+  padding: 0.65rem 0.85rem;
   border-radius: var(--go-radius-md);
   background: color-mix(in srgb, var(--go-teal) 8%, white);
   color: var(--go-teal);
-  margin-bottom: 0.9rem;
+  margin-bottom: 0.7rem;
 }
 
-.wompi-status-off {
+.wompi-status-row.off {
   background: color-mix(in srgb, #b8860b 10%, white);
   color: #8a6600;
 }
 
-.wompi-status-title {
-  margin: 0;
-  font-weight: 700;
-  color: var(--go-charcoal);
+.wompi-status-text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.1rem;
 }
 
-.wompi-status-detail {
-  margin: 0.15rem 0 0;
-  font-size: 0.82rem;
+.wompi-status-text strong {
+  color: var(--go-charcoal);
+  font-size: 0.86rem;
+}
+
+.wompi-status-text span {
+  font-size: 0.76rem;
   color: #5b6472;
 }
 
-.wompi-actions {
-  display: flex;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
+/* Secciones colapsables (URL de eventos, credenciales): cerradas por
+   defecto para no saturar la vista cuando ya todo esta configurado - ver
+   settings.page.ts (el <details> de credenciales se abre solo mientras
+   Wompi no este configurado). */
+.wompi-details {
+  margin-bottom: 0.6rem;
+  border-radius: var(--go-radius-md);
+  background: var(--go-bg);
+  padding: 0 0.85rem;
 }
 
-.wompi-form-heading {
-  margin: 0;
+.wompi-details summary {
+  cursor: pointer;
+  padding: 0.65rem 0;
   font-weight: 700;
-  font-size: 0.9rem;
-}
-
-.payment-type-option {
+  font-size: 0.86rem;
+  color: var(--go-charcoal);
+  list-style: none;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
+  justify-content: space-between;
+}
+
+.wompi-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.wompi-details summary::after {
+  content: '▾';
+  font-size: 0.7rem;
+  color: color-mix(in srgb, var(--go-dark) 50%, white);
+  transition: transform 0.15s ease;
+}
+
+.wompi-details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+.wompi-details > *:not(summary) {
+  padding-bottom: 0.9rem;
 }
 
 .wompi-webhook-box {
-  margin-top: 0.5rem;
-  padding: 0.8rem 0.9rem;
-  border-radius: var(--go-radius-md);
-  background: var(--go-bg);
   display: grid;
-  gap: 0.4rem;
-}
-
-.wompi-webhook-label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin: 0;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--go-charcoal);
+  gap: 0.5rem;
 }
 
 .wompi-webhook-row {
@@ -377,6 +392,27 @@ app-chat-link-qr-card {
   background: #ffffff;
   border-radius: var(--go-radius-sm);
   padding: 0.5rem 0.6rem;
+}
+
+.text-danger-btn {
+  background: none;
+  border: none;
+  padding: 0.3rem 0;
+  color: #bd2e2e;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.text-danger-btn:hover {
+  color: #8f1f1f;
+}
+
+.text-danger-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .wompi-webhook-row code {

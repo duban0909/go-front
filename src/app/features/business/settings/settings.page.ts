@@ -102,11 +102,13 @@ export class SettingsPageComponent implements OnInit {
     });
     this.zoneForm = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required, notBlankValidator]],
-      fee: [0, [Validators.required, Validators.min(0)]]
+      fee: [0, [Validators.required, Validators.min(0)]],
+      aliasesText: ['']
     });
     this.editZoneForm = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required, notBlankValidator]],
-      fee: [0, [Validators.required, Validators.min(0)]]
+      fee: [0, [Validators.required, Validators.min(0)]],
+      aliasesText: ['']
     });
     this.ownerNameForm = this.formBuilder.nonNullable.group({
       name: ['', [Validators.required]]
@@ -165,6 +167,19 @@ export class SettingsPageComponent implements OnInit {
     }
   }
 
+  /** "Poblado, El Poblao" -> ['Poblado', 'El Poblao'] (recorta espacios y descarta vacios). */
+  private parseAliasesText(text: string): string[] {
+    return text
+      .split(',')
+      .map((a) => a.trim())
+      .filter((a) => a.length > 0);
+  }
+
+  /** ['Poblado', 'El Poblao'] -> "Poblado, El Poblao", para precargar el campo de texto al editar. */
+  private formatAliasesText(aliases: string[]): string {
+    return (aliases ?? []).join(', ');
+  }
+
   async addZone(): Promise<void> {
     const businessId = this.sessionService.businessId();
 
@@ -173,13 +188,20 @@ export class SettingsPageComponent implements OnInit {
       return;
     }
 
-    const { name, fee } = this.zoneForm.getRawValue();
+    const { name, fee, aliasesText } = this.zoneForm.getRawValue();
     this.isSavingZone.set(true);
     this.zoneError.set('');
 
     try {
-      await firstValueFrom(this.apiService.createHomeVisitZone({ business_id: businessId, name: name.trim(), fee }));
-      this.zoneForm.reset({ name: '', fee: 0 });
+      await firstValueFrom(
+        this.apiService.createHomeVisitZone({
+          business_id: businessId,
+          name: name.trim(),
+          fee,
+          aliases: this.parseAliasesText(aliasesText)
+        })
+      );
+      this.zoneForm.reset({ name: '', fee: 0, aliasesText: '' });
       await this.loadZones();
     } catch (error) {
       const status = (error as { status?: number }).status;
@@ -212,7 +234,7 @@ export class SettingsPageComponent implements OnInit {
 
   startEditZone(zone: HomeVisitZone): void {
     this.zoneError.set('');
-    this.editZoneForm.reset({ name: zone.name, fee: zone.fee });
+    this.editZoneForm.reset({ name: zone.name, fee: zone.fee, aliasesText: this.formatAliasesText(zone.aliases) });
     this.editingZoneId.set(zone.id);
   }
 
@@ -226,13 +248,16 @@ export class SettingsPageComponent implements OnInit {
       return;
     }
 
-    const { name, fee } = this.editZoneForm.getRawValue();
+    const { name, fee, aliasesText } = this.editZoneForm.getRawValue();
+    const aliases = this.parseAliasesText(aliasesText);
     this.isUpdatingZone.set(true);
     this.zoneError.set('');
 
     try {
-      await firstValueFrom(this.apiService.updateHomeVisitZone(zone.id, { name: name.trim(), fee }));
-      this.zones.update((list) => list.map((item) => (item.id === zone.id ? { ...item, name: name.trim(), fee } : item)));
+      await firstValueFrom(this.apiService.updateHomeVisitZone(zone.id, { name: name.trim(), fee, aliases }));
+      this.zones.update((list) =>
+        list.map((item) => (item.id === zone.id ? { ...item, name: name.trim(), fee, aliases } : item))
+      );
       this.editingZoneId.set(null);
     } catch {
       this.zoneError.set('No se pudo guardar la zona.');

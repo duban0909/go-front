@@ -389,6 +389,8 @@ export interface HomeVisitZone {
   name: string;
   fee: number;
   active: boolean;
+  /** Variantes del nombre (ej. "Poblado" para la zona "El Poblado") que el bot tambien reconoce al ubicar al cliente. */
+  aliases: string[];
 }
 
 export interface HomeVisitZonesResponse {
@@ -399,12 +401,14 @@ export interface HomeVisitZoneCreate {
   business_id: string;
   name: string;
   fee: number;
+  aliases?: string[];
 }
 
 export interface HomeVisitZoneUpdate {
   name?: string;
   fee?: number;
   active?: boolean;
+  aliases?: string[];
 }
 
 /**

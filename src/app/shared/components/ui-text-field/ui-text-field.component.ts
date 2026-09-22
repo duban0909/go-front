@@ -89,6 +89,7 @@ let nextFieldId = 0;
     }
 
     .field-icon {
+      grid-column: 1;
       width: 2rem;
       height: 2rem;
       display: grid;
@@ -97,6 +98,14 @@ let nextFieldId = 0;
     }
 
     .input-shell input {
+      /* Columna fija (no auto-placement): sin esto, un campo SIN [icon]
+         (ej. password sin icono, como las llaves de Wompi) deja el grid
+         con solo 2 items para 3 columnas (auto 1fr auto) - el
+         auto-placement de CSS Grid los mete en las columnas 1 y 2 en vez
+         de 2 y 3, angostando el input y separando el boton de ojo del
+         recuadro blanco. Fijar la columna de cada elemento evita que la
+         presencia/ausencia del icono cambie donde cae el resto. */
+      grid-column: 2;
       width: 100%;
       min-height: 2.75rem;
       border: 0;
@@ -120,6 +129,7 @@ let nextFieldId = 0;
     }
 
     .password-toggle {
+      grid-column: 3;
       border: 0;
       background: transparent;
       width: 2.4rem;
