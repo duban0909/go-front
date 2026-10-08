@@ -119,10 +119,12 @@
                 <span class="appointment-price">{{ appointment.price | copCurrency }}</span>
               </div>
 
-              <span class="appointment-phone">
-                <app-lucide-icon name="phone" [size]="15" [strokeWidth]="2" />
-                {{ appointment.clientPhone }}
-              </span>
+              @if (appointment.clientPhone) {
+                <span class="appointment-phone">
+                  <app-lucide-icon name="phone" [size]="15" [strokeWidth]="2" />
+                  {{ appointment.clientPhone }}
+                </span>
+              }
             </div>
           </article>
         }
@@ -142,7 +144,16 @@
       <p class="form-date">{{ fullDateLabel() }}</p>
 
       <app-text-field label="Nombre del cliente" placeholder="Nombre" [showLabel]="true" formControlName="client_name" />
-      <app-text-field label="WhatsApp del cliente" type="tel" placeholder="3000000000" [showLabel]="true" formControlName="client_phone" />
+      <app-text-field
+        label="WhatsApp del cliente (opcional)"
+        type="tel"
+        placeholder="3000000000"
+        [showLabel]="true"
+        formControlName="client_phone"
+      />
+      @if (!form.controls.client_phone.value) {
+        <p class="hint-text">Sin WhatsApp, el cliente no recibira confirmacion ni recordatorio de esta cita.</p>
+      }
 
       <label class="field-label">
         Servicio

@@ -102,7 +102,11 @@ export class AppointmentsPageComponent implements OnInit {
   ) {
     this.form = this.formBuilder.nonNullable.group({
       client_name: ['', [Validators.required]],
-      client_phone: ['', [Validators.required]],
+      // Opcional: un cliente presencial agendado manualmente puede no tener
+      // WhatsApp (ver routes/manual_appointments.py en el backend, que ya
+      // acepta client_phone vacio). Si se deja vacio, simplemente no se le
+      // manda confirmacion ni recordatorio por WhatsApp a esa cita.
+      client_phone: [''],
       service_id: ['', [Validators.required]],
       employee_id: ['', [Validators.required]],
       time: ['', [Validators.required]],

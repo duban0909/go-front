@@ -369,6 +369,19 @@
   gap: 0.9rem;
 }
 
+/* El formulario es largo (nombre, telefono, servicio, domicilio opcional,
+   empleado, hora) y en telefonos de pantalla corta puede superar el alto
+   visible del modal; "sticky" deja el boton de confirmar siempre a la
+   vista en la parte baja del sheet mientras se hace scroll al resto del
+   formulario, en vez de quedar cortado o escondido debajo del contenido. */
+.appointment-form app-button {
+  position: sticky;
+  bottom: 0;
+  margin-top: 0.3rem;
+  padding-top: 0.7rem;
+  background: linear-gradient(to top, #fff 65%, transparent);
+}
+
 .form-date {
   margin: 0;
   color: color-mix(in srgb, var(--go-dark) 62%, white);

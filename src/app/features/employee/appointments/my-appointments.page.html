@@ -83,10 +83,12 @@
                 <span class="appointment-price">{{ appointment.price | copCurrency }}</span>
               </div>
 
-              <span class="appointment-phone">
-                <app-lucide-icon name="phone" [size]="15" [strokeWidth]="2" />
-                {{ appointment.clientPhone }}
-              </span>
+              @if (appointment.clientPhone) {
+                <span class="appointment-phone">
+                  <app-lucide-icon name="phone" [size]="15" [strokeWidth]="2" />
+                  {{ appointment.clientPhone }}
+                </span>
+              }
             </div>
           </article>
         }

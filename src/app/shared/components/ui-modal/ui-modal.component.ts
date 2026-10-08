@@ -33,7 +33,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       overflow-y: auto;
       background: #fff;
       border-radius: 1.4rem 1.4rem 0 0;
-      padding: 1.25rem 1.25rem 1.75rem;
+      /* padding-bottom suma el area segura (notch/gesture bar de iOS) para
+         que el contenido, y sobre todo un boton de submit al final de un
+         formulario largo, nunca quede pegado o tapado por la barra de
+         gestos del telefono - mismo patron que .bottom-nav en
+         business-shell.page.css. */
+      padding: 1.25rem 1.25rem calc(1.75rem + env(safe-area-inset-bottom, 0px));
       box-shadow: 0 -8px 30px rgb(14 24 44 / 18%);
       animation: slide-up 200ms ease-out;
     }
