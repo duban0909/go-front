@@ -1,7 +1,8 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild, computed, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
-import { ChatHistoryResponse, ChatOption } from '../../core/models/goagenda.models';
+import { HttpErrorResponse } from '@angular/common/http';
+import { TimeoutError, firstValueFrom, timeout } from 'rxjs';
+import { ChatHistoryResponse, ChatMessageResponse, ChatOption } from '../../core/models/goagenda.models';
 import { GoagendaApiService } from '../../core/services/goagenda-api.service';
 import { LucideIconComponent } from '../../shared/components/lucide-icon/lucide-icon.component';
 
@@ -9,6 +10,38 @@ const SESSION_KEY_PREFIX = 'goagenda_chat_session_';
 const SOUND_PREF_KEY = 'goagenda_chat_sound_enabled';
 const TEXTAREA_MAX_HEIGHT = 120;
 const POLL_INTERVAL_MS = 5000;
+// Por debajo del limite de 100s del tunel de Cloudflare: un turno normal
+// del agente tarda unos segundos; si se queda colgado (ej. el celular
+// cambio de red) es mejor cortar y reintentar que bloquear el chat.
+const SEND_TIMEOUT_MS = 75_000;
+const SEND_RETRY_DELAY_MS = 1500;
+
+/** Id unico por mensaje del cliente, para que el envio sea idempotente (ver sendWithRetry). */
+function newClientMessageId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // Navegadores viejos sin randomUUID: suficiente para distinguir mensajes de una misma sesion.
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+/** Sin red (status 0), errores 5xx (backend o tunel de Cloudflare) y timeouts: vale la pena reintentar. */
+function isTransientError(error: unknown): boolean {
+  if (error instanceof TimeoutError) {
+    return true;
+  }
+  return error instanceof HttpErrorResponse && (error.status === 0 || error.status >= 500);
+}
+
+function describeError(error: unknown): string {
+  if (error instanceof HttpErrorResponse) {
+    return `HTTP ${error.status} ${error.statusText || ''}`.trim();
+  }
+  if (error instanceof TimeoutError) {
+    return `timeout de ${SEND_TIMEOUT_MS / 1000}s`;
+  }
+  return String(error);
+}
 
 interface ChatBubble {
   role: 'user' | 'assistant';
@@ -50,6 +83,10 @@ export class ChatPageComponent implements OnInit, OnDestroy {
   private businessId = '';
   private employeeId = '';
   private sessionId = '';
+  /** Ultimo mensaje que no se pudo enviar: si el cliente lo reenvia igual, se reusa su id. */
+  private failedMessage: { text: string; clientMessageId: string } | null = null;
+  /** El historial no cargo al abrir el chat (error temporal): el polling lo trae y quita el aviso. */
+  private historyLoadFailed = false;
   private audioContext?: AudioContext;
   private readonly pendingScrollTimeouts: ReturnType<typeof setTimeout>[] = [];
   private pollTimer?: ReturnType<typeof setInterval>;
@@ -169,7 +206,14 @@ export class ChatPageComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.messages.update((current) => [...current, { role: 'user', content: text }]);
+    // Si el cliente reenvia el mismo texto que fallo, se reutiliza su id: si
+    // el backend alcanzo a procesarlo (y solo se perdio la respuesta en el
+    // camino), devuelve esa respuesta en vez de procesarlo dos veces.
+    const clientMessageId =
+      this.failedMessage?.text === text ? this.failedMessage.clientMessageId : newClientMessageId();
+    const bubble: ChatBubble = { role: 'user', content: text };
+
+    this.messages.update((current) => [...current, bubble]);
     this.draft.set('');
     this.errorMessage.set('');
     this.isSending.set(true);
@@ -177,19 +221,53 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     this.queueScroll();
 
     try {
-      const response = await firstValueFrom(
-        this.apiService.sendChatMessage(this.businessId, this.sessionId, text, this.employeeId || undefined)
-      );
+      const response = await this.sendWithRetry(text, clientMessageId);
+      this.failedMessage = null;
       this.messages.update((current) => [
         ...current,
         { role: 'assistant', content: response.respuesta, options: response.opciones }
       ]);
       this.playNotificationSound();
-    } catch {
-      this.errorMessage.set('No se pudo enviar el mensaje. Intenta de nuevo.');
+    } catch (error) {
+      // Antes este catch se tragaba el error sin dejar rastro y no habia
+      // forma de saber por que fallaba; ahora queda en la consola.
+      console.error('[chat] no se pudo enviar el mensaje', describeError(error));
+      this.failedMessage = { text, clientMessageId };
+      // Se devuelve el texto al cuadro de escritura (en vez de dejar una
+      // burbuja que parece enviada pero no llego) para reenviarlo con un toque.
+      this.messages.update((current) => current.filter((item) => item !== bubble));
+      this.draft.set(text);
+      this.errorMessage.set('No se pudo enviar el mensaje. Revisa tu conexion y toca enviar de nuevo.');
     } finally {
       this.isSending.set(false);
       this.queueScroll();
+    }
+  }
+
+  /**
+   * Un reintento automatico ante fallas transitorias (sin red, 5xx del
+   * servidor o del tunel de Cloudflare, timeout): la mayoria se resuelven
+   * solas en segundos (ej. un reinicio del backend por un deploy). Los 4xx
+   * no se reintentan porque repetir la misma peticion daria el mismo error.
+   * Es seguro reintentar porque el envio es idempotente por clientMessageId.
+   */
+  private async sendWithRetry(text: string, clientMessageId: string): Promise<ChatMessageResponse> {
+    const enviar = () =>
+      firstValueFrom(
+        this.apiService
+          .sendChatMessage(this.businessId, this.sessionId, text, this.employeeId || undefined, clientMessageId)
+          .pipe(timeout(SEND_TIMEOUT_MS))
+      );
+
+    try {
+      return await enviar();
+    } catch (error) {
+      if (!isTransientError(error)) {
+        throw error;
+      }
+      console.warn('[chat] envio fallido, reintentando una vez', describeError(error));
+      await new Promise((resolve) => setTimeout(resolve, SEND_RETRY_DELAY_MS));
+      return enviar();
     }
   }
 
@@ -224,10 +302,21 @@ export class ChatPageComponent implements OnInit, OnDestroy {
     const storedSessionId = localStorage.getItem(storageKey);
 
     if (storedSessionId) {
+      const cargarHistorial = () =>
+        firstValueFrom(this.apiService.getChatHistory(this.businessId, storedSessionId, this.employeeId || undefined));
+
       try {
-        const response = await firstValueFrom(
-          this.apiService.getChatHistory(this.businessId, storedSessionId, this.employeeId || undefined)
-        );
+        let response: ChatHistoryResponse;
+        try {
+          response = await cargarHistorial();
+        } catch (error) {
+          if (!isTransientError(error)) {
+            throw error;
+          }
+          await new Promise((resolve) => setTimeout(resolve, SEND_RETRY_DELAY_MS));
+          response = await cargarHistorial();
+        }
+
         this.sessionId = storedSessionId;
         this.applyHistory(response);
 
@@ -237,7 +326,19 @@ export class ChatPageComponent implements OnInit, OnDestroy {
 
         this.queueScroll();
         return;
-      } catch {
+      } catch (error) {
+        // Antes cualquier falla (incluido un error temporal del servidor)
+        // borraba la sesion y creaba una nueva: el cliente perdia toda su
+        // conversacion. Solo un 404 significa que la sesion ya no sirve; ante
+        // un error temporal se conserva, y el polling (pollForNewMessages)
+        // trae el historial en cuanto el servidor vuelva a responder.
+        console.error('[chat] no se pudo cargar el historial', describeError(error));
+        if (isTransientError(error)) {
+          this.sessionId = storedSessionId;
+          this.historyLoadFailed = true;
+          this.errorMessage.set('No pudimos cargar tu conversacion. Reintentando en unos segundos...');
+          return;
+        }
         localStorage.removeItem(storageKey);
       }
     }
@@ -333,8 +434,25 @@ export class ChatPageComponent implements OnInit, OnDestroy {
         }
 
         this.messages.update((current) => [...current, ...nuevos]);
+
+        // Un mensaje que parecio fallar pero que el servidor si alcanzo a
+        // procesar (solo se perdio la respuesta) llega por aqui: se limpia
+        // el borrador para que el cliente no lo reenvie.
+        const failed = this.failedMessage;
+        if (failed && nuevos.some((item) => item.role === 'user' && item.content.trim() === failed.text)) {
+          this.failedMessage = null;
+          if (this.draft().trim() === failed.text) {
+            this.draft.set('');
+          }
+        }
+
         this.playNotificationSound();
         this.queueScroll();
+      }
+      // El historial que no se pudo cargar al abrir el chat ya llego: se quita ese aviso.
+      if (this.historyLoadFailed) {
+        this.historyLoadFailed = false;
+        this.errorMessage.set('');
       }
     } catch {
       // Un fallo de polling no debe interrumpir el chat; se reintenta en el siguiente ciclo.

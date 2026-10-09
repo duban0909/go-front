@@ -341,9 +341,21 @@ export class GoagendaApiService {
       .pipe(map((response) => response.session_id));
   }
 
-  sendChatMessage(businessId: string, sessionId: string, mensaje: string, employeeId?: string): Observable<ChatMessageResponse> {
+  /**
+   * clientMessageId hace el envio idempotente: si se reintenta con el mismo
+   * id, el backend devuelve la respuesta ya generada en vez de procesar el
+   * mensaje otra vez (ver agent/graph.py:enviar_mensaje en el backend).
+   */
+  sendChatMessage(
+    businessId: string,
+    sessionId: string,
+    mensaje: string,
+    employeeId?: string,
+    clientMessageId?: string
+  ): Observable<ChatMessageResponse> {
     return this.http.post<ChatMessageResponse>(`${this.chatBasePath(businessId, employeeId)}/sessions/${sessionId}/messages`, {
-      mensaje
+      mensaje,
+      ...(clientMessageId ? { client_message_id: clientMessageId } : {})
     });
   }
 
