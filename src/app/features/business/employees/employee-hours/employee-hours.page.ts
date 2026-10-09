@@ -103,8 +103,11 @@ export class EmployeeHoursPageComponent implements OnInit {
           lunch_end: toApiTime(day.lunchEnd)
         })
       );
-    } catch {
-      this.error.set('No se pudo guardar el horario de ese dia.');
+    } catch (error) {
+      // El backend explica el motivo cuando aplica (ej. el empleado principal
+      // hereda el horario del negocio y no se edita aqui).
+      const detail = (error as { error?: { detail?: string } }).error?.detail;
+      this.error.set(detail || 'No se pudo guardar el horario de ese dia.');
     }
   }
 }

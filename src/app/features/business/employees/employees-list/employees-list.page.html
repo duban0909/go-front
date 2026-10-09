@@ -39,9 +39,15 @@
           </div>
 
           <div class="employee-actions">
-            <a class="action-link" [routerLink]="['/business/employees', employee.id, 'hours']">
+            <!-- Regla de negocio: el empleado principal hereda el horario del
+                 negocio, asi que su "Horario" es la pestaña Horario del negocio
+                 (el backend rechaza editarlo aparte). -->
+            <a
+              class="action-link"
+              [routerLink]="employee.role === 'owner' ? ['/business/hours'] : ['/business/employees', employee.id, 'hours']"
+            >
               <app-lucide-icon name="clock" [size]="16" [strokeWidth]="2" />
-              Horario
+              {{ employee.role === 'owner' ? 'Horario del negocio' : 'Horario' }}
             </a>
             <a class="action-link" [routerLink]="['/business/employees', employee.id, 'services']">
               <app-lucide-icon name="scissors" [size]="16" [strokeWidth]="2" />
